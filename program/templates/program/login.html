@@ -1,0 +1,39 @@
+{% extends "program/base.html" %}
+{% block content %}
+<style>
+    #title {
+        margin: 50px 0 30px 0;
+        text-align: center;
+    }
+    .caption {
+        margin: 5px 0;
+        font-weight: bold;
+    }
+</style>
+
+<h2 id="title">CSSW{{ settings.YEAR }}<br>Registration Form</h2>
+<form method="post" action="../operation/login/?mode={{ mode }}">
+    {% if errmsg %}
+    <div class="alert alert-danger">
+        {{ errmsg }}
+    </div>
+    {% endif %}
+    <div class="card">
+        <div class="card-body">
+            <div class="form-group">
+                <label for="reg-username">Eメールアドレス Email address</label>
+                <input type="email" class="form-control" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="reg-password">パスワード Password</label>
+                <input type="password" class="form-control" name="password" required>
+            </div>
+        </div>
+    </div>
+    <input class="btn btn-secondary" type="submit" value="Log in"/>
+    <input type="hidden" name="user_agent" value="" />
+</form>
+<script>
+    $("input[name=user_agent]").val(window.navigator.userAgent);
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "program/base.html" %}
+{% block content %}
+<style>
+    #title {
+        margin: 50px 0 30px 0;
+        text-align: center;
+    }
+    .caption {
+        margin: 5px 0;
+        font-weight: bold;
+    }
+    #btn-register {
+        margin: 30px auto;
+        width: 30%;
+        height: 50px;
+        display: block;
+    }
+</style>
+
+<h2 id="title">CSSW{{ settings.YEAR }}<br>Registration Form</h2>
+<form method="post" action="../operation/registration/">
+    <div class="card">
+        <div class="card-body">
+            <ul style="-webkit-padding-start:20px;margin-bottom:0;">
+                <li><p class="text-danger" style="margin-bottom:0;">全て必須項目です。 All fields are required.</p></li>
+            </ul>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h6>基本情報 Personal information</h6>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label for="reg-laboratory">所属研究室 Laboratory</label>
+                <select class="form-control" name="laboratory_id" required>
+                    <option value="">--</option>
+                    {% for lab in labs %}
+                        {% if lab.id == user_info_participant.laboratory_id %}
+                            <option value="{{ lab.id }}" selected>{{ lab.display_name }}研 {{ lab.display_name_en }} Lab.</option>
+                        {% else %}
+                            <option value="{{ lab.id }}">{{ lab.display_name }}研 {{ lab.display_name_en }} Lab.</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reg-grade">学年 Grade</label>
+                <select class="form-control" name="grade_id" required>
+                    <option value="">--</option>
+                    {% for grade in grades %}
+                        {% if grade.id == user_info_participant.grade_id %}
+                            <option value="{{ grade.id }}" selected>{{ grade.display_name }}</option>
+                        {% else %}
+                            <option value="{{ grade.id }}">{{ grade.display_name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group form-group-half">
+                <label for="reg-name">姓 Surname</label>
+                <input type="text" class="form-control" name="surname" value="{{ user_info_participant.surname }}" required>
+            </div>
+            <div class="form-group form-group-half">
+                <label for="reg-name">名 Given name</label>
+                <input type="text" class="form-control" name="givenname" value="{{ user_info_participant.givenname }}" required>
+            </div>
+            <div class="clear"></div>
+            <div class="form-group">
+                <label for="reg-username">Eメールアドレス Email address</label>
+                <input type="email" class="form-control" name="email" value="{{ user_info_participant.email }}" required>
+            </div>
+            <small class="form-text text-muted">*登録情報の変更および当日の参加にログインが必要となります。 Log-in will be required for editing registration and on-site participation.</small>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h6>ポスター情報 Poster information</h6>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label for="reg-username">表題 Title</label>
+                <input type="text" class="form-control" name="title" value="{{ user_info_program.title }}" required>
+            </div>
+            <div class="form-group">
+                <label for="reg-password">セッション種別 Session category</label>
+                <select class="form-control" name="session_category" required>
+                    <option value="">--</option>
+                    {% for category in session_categories %}
+                        {% if category == user_info_program.session_category %}
+                            <option value="{{ category }}" selected>{{ category }}</option>
+                        {% else %}
+                            <option value="{{ category }}">{{ category }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <small class="form-text text-muted">*指導教員と相談の上選択して下さい。 Please be sure to consult with your advisor before selecting.</small>
+            </div>
+        </div>
+    </div>
+    <input type="hidden" name="participant_id" value="{{ user_info_participant.id }}"/>
+    <input id="btn-register" class="btn btn-primary" type="submit" value="Submit"/>
+</form>
+{% endblock %}

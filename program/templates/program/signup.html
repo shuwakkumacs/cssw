@@ -1,0 +1,119 @@
+{% extends "program/base.html" %}
+{% block content %}
+<style>
+    #forms-wrapper {
+        padding: 50px 20px;
+        box-sizing: border-box;
+    }
+    #title {
+        margin: 50px 0 30px 0;
+        text-align: center;
+    }
+    #login {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 0.8em;
+    }
+    .caption {
+        margin: 5px 0;
+        font-weight: bold;
+    }
+    span.required {
+        font-weight: bold;
+        color: #ff2000;
+        padding-left: 3px;
+    }
+    #btn-register {
+        margin: 30px auto;
+        width: 30%;
+        height: 50px;
+        display: block;
+    }
+    .warning {
+        background-color: #fbb;
+    }
+</style>
+
+<div id="forms-wrapper">
+    <h2 id="title">CSSW2018<br>Sign-Up Form</h2>
+    <div id="login"><a href="../login">既にアカウントを持っている場合<br>I already have my account</a></div>
+    <div class="form-group">
+        <label for="reg-laboratory">所属研究室 Laboratory<span class="required">*</span></label>
+        <select class="form-control" id="reg-laboratory">
+            <option value="0">--</option>
+            {% for lab in labs %}
+                <option value="{{ lab.id }}">{{ lab.display_name }}研 {{ lab.display_name_en }} Lab.</option>
+            {% endfor %}
+            <option value="-1">その他 Other</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="reg-grade">学年 Grade<span class="required">*</span></label>
+        <select class="form-control" id="reg-grade">
+            <option value="0">--</option>
+            {% for grade in grades %}
+                <option value="{{ grade.id }}">{{ grade.display_name }}</option>
+            {% endfor %}
+            <option value="-1">その他 Other</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="reg-name">氏名 Name<span class="required">*</span></label>
+        <input type="email" class="form-control" id="reg-name">
+    </div>
+    <div class="caption">(複数のデバイスでアクセスしたい場合、以下も入力して下さい。 Please fill in below if you wish to access from multiple devices.)</div>
+    <div class="form-group">
+        <label for="reg-username">ユーザー名 Username</label>
+        <input type="email" class="form-control" id="reg-username">
+    </div>
+    <div class="form-group">
+        <label for="reg-password">パスワード Password</label>
+        <input type="password" class="form-control" id="reg-password">
+    </div>
+    <button id="btn-register" class="btn btn-primary" type="submit">Register</button>
+</div>
+
+<script>
+    $("input, select").on("click", function(){
+        $(this).removeClass("warning");
+    });
+    $("#btn-register").on("click",function(){
+        var name = $("#reg-name").val();
+        var laboratory_id = $("#reg-laboratory").val();
+        var grade_id = $("#reg-grade").val();
+        var username = $("#reg-username").val();
+        var password = $("#reg-password").val();
+
+        if(laboratory_id==-1) laboratory_id = null;
+        if(grade_id==-1) grade_id = null;
+
+        if(name=="") $("#reg-name").addClass("warning");
+        if(laboratory_id==0) $("#reg-laboratory").addClass("warning");
+        if(grade_id==0) $("#reg-grade").addClass("warning");
+        if(name=="" || laboratory_id==0 || grade_id==0){
+            alert("*印は必須項目です。The forms with * are necessary.");
+            return
+        }
+
+        var data = {
+            "name": name,
+            "laboratory_id": laboratory_id,
+            "grade_id": grade_id,
+            "username": username,
+            "password": password
+        };
+        $.ajax({
+            "type": "POST",
+            "data": JSON.stringify(data),
+            "url": "../operation/signup/",
+            "success": function(data){
+                if(data.status=="success") window.location.reload();
+                else alert("sign-up failed: "+data.error);
+            },
+            "error": function(){
+                alert("some system error occurred!");
+            }
+        });
+    });    
+</script>
+{% endblock %}
