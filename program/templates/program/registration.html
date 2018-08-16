@@ -16,15 +16,22 @@
         display: block;
     }
 </style>
-
 <h2 id="title">CSSW{{ settings.YEAR }}<br>Registration Form</h2>
 <form method="post" action="../operation/registration/">
     <div class="card">
         <div class="card-body">
             <ul style="-webkit-padding-start:20px;margin-bottom:0;">
+                {% if mode != "edit" %}
                 <li>登録内容の修正には<a href="../login/?mode=reg">ログイン</a>してください。 Please <a href="../login/?mode=reg">log in</a> to edit your information.</li>
+            </ul>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <ul style="-webkit-padding-start:20px;margin-bottom:0;">
                 <li>不明な点があれば{{ settings.COMMITTEE_CHAIR.lab }}研{{ settings.COMMITTEE_CHAIR.grade }}{{ settings.COMMITTEE_CHAIR.name }}までご連絡ください。 Please contact {{ settings.COMMITTEE_CHAIR.name_en }} ({{ settings.COMMITTEE_CHAIR.grade }}, {{ settings.COMMITTEE_CHAIR.lab_en }} Lab.) for questions. (Email: <a href="mailto:{{ settings.COMMITTEE_CHAIR.email }}">{{ settings.COMMITTEE_CHAIR.email }}</a>)</li>
-                <li><p class="text-danger" style="margin-bottom:0;">全て必須項目です。 All fields are required.</p></li>
+                {% endif %}
+                <li><p class="text-danger" style="margin-bottom:0;">全て必須項目です。（該当なしの場合、姓のみ省略可能） All fields are required (except a surname, if not applicable).</p></li>
             </ul>
         </div>
     </div>
@@ -34,64 +41,79 @@
         </div>
         <div class="card-body">
             <div class="form-group">
-                <label for="reg-laboratory">所属研究室 Laboratory</label>
-                <select class="form-control" name="laboratory_id" required>
-                    <option value="">--</option>
-                    {% for lab in labs %}
-                        <option value="{{ lab.id }}">{{ lab.display_name }}研 {{ lab.display_name_en }} Lab.</option>
-                    {% endfor %}
-                </select>
+                {{ participant_form.laboratory.label_tag }} {{ participant_form.laboratory }}
             </div>
             <div class="form-group">
-                <label for="reg-grade">学年 Grade</label>
-                <select class="form-control" name="grade_id" required>
-                    <option value="">--</option>
-                    {% for grade in grades %}
-                        <option value="{{ grade.id }}">{{ grade.display_name }}</option>
-                    {% endfor %}
-                </select>
+                {{ participant_form.grade.label_tag }} {{ participant_form.grade }}
             </div>
             <div class="form-group form-group-half">
-                <label for="reg-name">姓 Surname</label>
-                <input type="text" class="form-control" name="surname" required>
+                {{ participant_form.surname.label_tag }} {{ participant_form.surname }}
             </div>
             <div class="form-group form-group-half">
-                <label for="reg-name">名 Given name</label>
-                <input type="text" class="form-control" name="givenname" required>
+                {{ participant_form.givenname.label_tag }} {{ participant_form.givenname }}
             </div>
             <div class="clear"></div>
             <div class="form-group">
-                <label for="reg-username">Eメールアドレス Email address</label>
-                <input type="email" class="form-control" name="email" required>
+                {{ participant_form.email.label_tag }} {{ participant_form.email }}
             </div>
             <div class="form-group">
-                <label for="reg-password">パスワード Password</label>
-                <input type="password" class="form-control" name="password" required>
+                {% if mode != "edit" %}
+                {{ participant_form.password.label_tag }}
+                {% endif %}
+                {{ participant_form.password }}
+                {% if mode != "edit" %}
+                <small class="form-text text-muted">*登録情報の変更および当日の参加にログインが必要となります。 Log-in will be required for editing registration and on-site participation.</small>
+                {% endif %}
             </div>
-            <small class="form-text text-muted">*登録情報の変更および当日の参加にログインが必要となります。 Log-in will be required for editing registration and on-site participation.</small>
+            <div class="form-group">
+                {{ participant_form.is_presenter.label_tag }} {{ participant_form.is_presenter }}
+            </div>
+        </div>
+    </div>
+    <div class="card card-presentation">
+        <div class="card-header">
+            <h6>発表情報 Presentation information</h6>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                {{ program_form.title.label_tag }} {{ program_form.title }}
+            </div>
+            <div class="form-group">
+                {{ program_form.session_category.label_tag }} {{ program_form.session_category }}
+                <small class="form-text text-muted">*指導教員と相談の上選択して下さい。 Please be sure to consult with your advisor before selecting.</small>
+            </div>
+            <div class="form-group">
+                {{ program_form.require_table.label_tag }} {{ program_form.require_table }}
+            </div>
         </div>
     </div>
     <div class="card">
         <div class="card-header">
-            <h6>ポスター情報 Poster information</h6>
+            <h6>その他 Others</h6>
         </div>
         <div class="card-body">
             <div class="form-group">
-                <label for="reg-username">表題 Title</label>
-                <input type="text" class="form-control" name="title" required>
-            </div>
-            <div class="form-group">
-                <label for="reg-password">セッション種別 Session category</label>
-                <select class="form-control" name="session_category" required>
-                    <option value="">--</option>
-                    {% for category in session_categories %}
-                        <option value="{{ category }}">{{ category }}</option>
-                    {% endfor %}
-                </select>
-                <small class="form-text text-muted">*指導教員と相談の上選択して下さい。 Please be sure to consult with your advisor before selecting.</small>
+                {{ participant_form.party_attendance.label_tag }} {{ participant_form.party_attendance }}
             </div>
         </div>
     </div>
+    {{ program_form.participant }}
     <input id="btn-register" class="btn btn-primary" type="submit" value="Register"/>
 </form>
+<script>
+    var togglePresentationInputs = function(){
+        var val = $("select[name=is_presenter]").val();
+        var $elems = $(".card-presentation").find("select,input");
+        if(val=="Yes") {
+            $elems.prop("disabled", false);
+            $elems.prop("required", true);
+        }
+        else {
+            $elems.prop("disabled", true);
+            $elems.prop("required", false);
+        }
+    };
+    togglePresentationInputs();
+    $("select[name=is_presenter]").on("change", togglePresentationInputs);
+</script>
 {% endblock %}

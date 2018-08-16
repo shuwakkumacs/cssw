@@ -3,29 +3,62 @@ import string
 import hashlib
 import random
 
-# Create your models here.
+GRADE_CHOICES = (
+    ("F", "Faculty"),
+    ("D", "D"),
+    ("M2", "M2"),
+    ("M1", "M1"),
+    ("B4", "B4"),
+    ("B3", "B3-")
+)
 
-class Grade(models.Model):
-    display_name = models.CharField(max_length=10, default="")
-    index = models.IntegerField(default=-1)
+LABORATORY_CHOICES = (
+    ("Ishikawa", "石川研 Ishikawa Lab."),
+    ("Ogawa", "小川研 Ogawa Lab."),
+    ("Katto", "甲藤研 Katto Lab."),
+    ("Kobayashi", "小林研 Kobayashi Lab."),
+    ("Sakai", "酒井研 Sakai Lab."),
+    ("Shimizu", "清水研 Shimizu Lab."),
+    ("Nakajima", "中島研 Nakajima Lab."),
+    ("Yamana", "山名研 Yamana Lab.")
+)
 
-class Laboratory(models.Model):
-    display_name = models.CharField(max_length=20, default="")
-    display_name_en = models.CharField(max_length=20, default="")
+PRESENTER_CHOICES = (
+    ("Yes", "あり Yes"),
+    ("No", "なし No")
+)
+
+REQUIRE_TABLE_CHOICES = (
+    ("No", "不要 No, I don't need one"),
+    ("Yes", "必要 Yes, I need one")
+)
+
+PARTY_ATTENDANCE_CHOICES = (
+    ("Yes", "する Yes, I participate"),
+    ("No", "しない No, I don't participate")
+)
+
+SESSION_CATEGORY_CHOICES = (
+    ("Technical", "Technical"),
+    ("WiP", "Work-in-Progress"),
+    ("Short", "Short Project")
+)
 
 class Participant(models.Model):
-    surname = models.CharField(max_length=200, default="")
-    givenname = models.CharField(max_length=200, default="")
-    laboratory = models.ForeignKey(Laboratory, on_delete=models.CASCADE, null=True)
-    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, null=True)
-    email = models.CharField(max_length=500, default="")
-    password_md5 = models.CharField(max_length=200, default="")
+    surname = models.CharField(max_length=50, default="", verbose_name="姓 Surname", blank=True)
+    givenname = models.CharField(max_length=50, default="", verbose_name="名 Given name")
+    laboratory = models.CharField(max_length=50, choices=LABORATORY_CHOICES, verbose_name="所属研究室 Laboratory")
+    grade = models.CharField(max_length=10, choices=GRADE_CHOICES, verbose_name="学年 Grade")
+    email = models.CharField(max_length=500, default="", verbose_name="Eメールアドレス Email address")
+    password = models.CharField(max_length=200, default="", verbose_name="パスワード Password")
+    is_presenter = models.CharField(max_length=10, choices=PRESENTER_CHOICES, verbose_name="発表の有無 Are you a presenter?")
+    party_attendance = models.CharField(max_length=10, choices=PARTY_ATTENDANCE_CHOICES, verbose_name="懇親会の参加 Dinner party")
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_modified = models.DateTimeField(blank=True, null=True)
 
     @staticmethod
     def get(email, password):
-        return Participant.objects.filter(email=email, password_md5=md5(password)).first()
+        return Participant.objects.filter(email=email, password=md5(password)).first()
 
     @staticmethod
     def get_by_id(id):
@@ -33,7 +66,7 @@ class Participant(models.Model):
 
     @staticmethod
     def add(request_data):
-        request_data["password_md5"] = md5(request_data["password"])
+        request_data["password"] = md5(request_data["password"])
         del request_data["password"]
         data_participant = Participant(**request_data)
         data_participant.save()
@@ -66,10 +99,11 @@ class AccessToken(models.Model):
 
 class Program(models.Model):
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE, null=True)
-    title = models.CharField(max_length=300, default="")
-    session_number = models.IntegerField(null=True, blank=True)
-    program_number = models.IntegerField(null=True, blank=True)
-    session_category = models.CharField(max_length=100,default="")
+    title = models.CharField(max_length=300, default="", verbose_name="表題 Title")
+    session_number = models.IntegerField(null=True, blank=True, verbose_name="セッション番号 Session number")
+    program_number = models.IntegerField(null=True, blank=True, verbose_name="プログラム番号 Program number")
+    session_category = models.CharField(max_length=100, choices=SESSION_CATEGORY_CHOICES, verbose_name="セッション種別 Session category")
+    require_table = models.CharField(max_length=10, choices=REQUIRE_TABLE_CHOICES, verbose_name="デモ用テーブルの用意 Demo table")
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_modified = models.DateTimeField(blank=True, null=True)
 

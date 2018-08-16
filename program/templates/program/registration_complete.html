@@ -1,5 +1,16 @@
 {% extends "program/base.html" %}
 {% block content %}
+{% if not err %}
 登録が完了しました。 Registration is completed.<br><br>
-<a href="../registration_edit/">情報を編集する Edit information</a>
+<a href="../registration/?mode=edit">情報を編集する Edit information</a>
+{% elif err == "duplicate" %}
+メールアドレスか所属・名前が既に登録されています。以下からログインしてください。<br>
+Your email address or affiliation and name had been already registered. Please log in from the link below.<br><br>
+<a href="../login/?mode=reg">情報を編集する Edit information</a><br><br>
+<a href="javascript:history.go(-1)">戻る Go Back</a>
+{% elif err == "invalid" %}
+エラーが発生しました。実行委員（{{ settings.COMMITTEE_CHAIR.name }}, {{ settings.COMMITTEE_CHAIR.lab }}研{{ settings.COMMITTEE_CHAIR.grade }}, {{ settings.COMMITTEE_CHAIR.email }}）に問い合わせてください。<br>
+An error occurred. Please contact the committee ({{ settings.COMMITTEE_CHAIR.name }}, {{ settings.COMMITTEE_CHAIR.lab }}研{{ settings.COMMITTEE_CHAIR.grade }}, {{ settings.COMMITTEE_CHAIR.email }}).<br><br>
+<a href="javascript:history.go(-1)">戻る Go Back</a>
+{% endif %}
 {% endblock %}

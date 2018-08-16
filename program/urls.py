@@ -8,7 +8,6 @@ urlpatterns = [
     url(r'^$', views.main),
     url(r'^registration/$', views.registration_view),
     url(r'^registration_complete/$', views.registration_complete_view),
-    url(r'^registration_edit/$', views.registration_edit_view),
     url(r'^signup/$', views.signup_view),
     url(r'^login/$', views.login_view),
     url(r'^operation/registration/$', views.registration),

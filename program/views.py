@@ -4,7 +4,10 @@ from django.shortcuts import render, redirect
 from django.template import loader
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+from django.db.models import Q
 from .models import *
+from .forms import *
 import json
 import hashlib
 import copy
@@ -16,111 +19,129 @@ import sys
 
 @csrf_exempt
 def main(request):
-    #access_token = request.COOKIES.get('access_token')
-    #if not access_token:
-    #    return redirect('signup/')
-    #else:
-    #    participant = authorize_by_access_token(access_token)
-    #    if participant:
-    #        program_history = ProgramHistory.get_all_for_participant(participant.id)
-    #        context = {
-    #            "program_history": program_history
-    #        }
-    #        return render(request, "program/main.html", context=context)
-    return render(request, "program/main.html")
-
-@csrf_exempt
-def registration_view(request):
-    labs = Laboratory.objects.all()
-    grades = Grade.objects.all()
-    context = {
-        "labs": labs,
-        "grades": grades,
-        "session_categories": settings["SESSION_CATEGORIES"],
-        "settings": settings
-    }
-    return render(request, "program/registration.html", context=context)
-
-@csrf_exempt
-def registration(request):
-    request_data = dict(request.POST)
-    participant_data = {
-        "laboratory_id": request_data["laboratory_id"][0],
-        "grade_id": request_data["grade_id"][0],
-        "surname": request_data["surname"][0],
-        "givenname": request_data["givenname"][0],
-        "email": request_data["email"][0]
-    }
-    program_data = {
-        "title": request_data["title"][0],
-        "session_category": request_data["session_category"][0]
-    }
-    
-    if "participant_id" in request_data:
-        participant = Participant.get_by_id(request_data["participant_id"][0])
-        program = Program.get_by_participant_id(request_data["participant_id"][0])
-
-        participant.laboratory_id = participant_data["laboratory_id"] 
-        participant.grade_id = participant_data["grade_id"] 
-        participant.surname = participant_data["surname"] 
-        participant.givenname = participant_data["givenname"] 
-        participant.email = participant_data["email"] 
-        participant.time_modified = timezone.now()
-        participant.save()
-        program.title = program_data["title"] 
-        program.session_category = program_data["session_category"] 
-        program.time_modified = timezone.now()
-        program.save()
-    else:
-        participant_data["password"] = request_data["password"][0]
-        participant = Participant.add(participant_data)
-
-        participant_data["participant_id"] = participant.id
-        program = Program.add(program_data)
-    return redirect("../../registration_complete/")
-
-@csrf_exempt
-def registration_complete_view(request):
-    return render(request, "program/registration_complete.html")
-
-@csrf_exempt
-def registration_edit_view(request):
     access_token = request.COOKIES.get('access_token')
     data_access_token = AccessToken.authorize(access_token)
     if not data_access_token:
         response = redirect("../login/?mode=reg")
         response.delete_cookie("access_token")
         return response
-    else: 
-        participant = Participant.get_by_id(id=data_access_token.participant_id)
-        program = Program.get_by_participant_id(participant_id=participant.id)
-        labs = Laboratory.objects.all()
-        grades = Grade.objects.all()
-        context = {
-            "labs": labs,
-            "grades": grades,
-            "session_categories": settings["SESSION_CATEGORIES"],
-            "user_info_participant": participant,
-            "user_info_program": program,
-            "settings": settings
-        }
-        print(context["user_info_participant"].__dict__)
-        return render(request, "program/registration_edit.html", context=context)
+
+    form = ParticipantForm()
+    
+    return render(request, "program/main.html", context = {"form": form})
+
+@csrf_exempt
+def registration_view(request):
+    mode = request.GET.get(key="mode", default=None)
+    err = request.GET.get(key="err", default=None)
+    if mode=="edit":
+        access_token = request.COOKIES.get('access_token')
+        data_access_token = AccessToken.authorize(access_token)
+        if not data_access_token:
+            response = redirect("../")
+            response.delete_cookie("access_token")
+            return response
+        else:
+            participant = Participant.get_by_id(id=data_access_token.participant_id)
+            program = Program.get_by_participant_id(participant_id=participant.id)
+            participant_form = ParticipantForm(instance=participant)
+            participant_form.fields["password"].widget = HiddenInput()
+            program_form = ProgramForm(instance=program)
+    else:
+        participant_form = ParticipantForm()
+        program_form = ProgramForm()
+    
+    context = {
+        "mode": mode,
+        "settings": settings,
+        "participant_form": participant_form,
+        "program_form": program_form
+    }
+    return render(request, "program/registration.html", context=context)
+
+@csrf_exempt
+def registration(request):
+    request_data = dict(request.POST)
+    participant_keys = ["laboratory", "grade", "surname", "givenname", "email", "password", "party_attendance", "is_presenter"]
+    program_keys = ["participant", "title", "session_category", "require_table"]
+    redirect_url = "../../registration_complete/"
+
+    postdata = { "participant": {}, "program": {} }
+    for key in participant_keys:
+        postdata["participant"][key] = request_data[key][0]
+    for key in program_keys:
+        if key in request_data:
+            postdata["program"][key] = request_data[key][0]
+    
+    #print(request_data)
+    #print(postdata["participant"])
+    #print(postdata["program"])
+    if postdata["program"]["participant"]:  # edit mode
+        try:
+            with transaction.atomic():
+                participant = Participant.get_by_id(postdata["program"]["participant"])
+                postdata["participant"]["time_modified"] = timezone.now()
+                f_pa = ParticipantForm(postdata["participant"], instance=participant)
+                print(postdata["participant"])
+                if f_pa.is_valid():
+                    f_pa.save()
+                    if postdata["participant"]["is_presenter"]=="Yes":
+                        program = Program.get_by_participant_id(postdata["program"]["participant"])
+                        postdata["program"]["time_modified"] = timezone.now()
+                        f_pr = ProgramForm(postdata["program"], instance=program)
+                        if f_pr.is_valid():
+                            f_pr.save()
+                        else:
+                            print("hoge1")
+                            raise ValueError()
+                else:
+                    print("hoge2")
+                    raise ValueError()
+        except ValueError as e:
+            print("fuga1")
+            redirect_url += "?err=invalid"
+
+    else:  # register mode
+        participant = Participant.objects.filter(Q(email=postdata["participant"]["email"]) | Q(surname=postdata["participant"]["surname"], givenname=postdata["participant"]["givenname"], laboratory=postdata["participant"]["laboratory"], grade=postdata["participant"]["grade"])).first()
+        if participant:
+            redirect_url += "?err=duplicate"
+        else:
+            try:
+                with transaction.atomic():
+                    postdata["participant"]["password"] = md5(request_data["password"][0])
+                    f_pa = ParticipantForm(postdata["participant"])
+                    if f_pa.is_valid():
+                        new_participant = f_pa.save()
+                        if postdata["participant"]["is_presenter"]=="Yes":
+                            postdata["program"]["participant"] = new_participant.id
+                            f_pr = ProgramForm(postdata["program"])
+                            if f_pr.is_valid():
+                                new_program = f_pr.save()
+                            else:
+                                print("hoge3")
+                                raise ValueError()
+                    else:
+                        print("hoge4")
+                        raise ValueError()
+            except ValueError:
+                print("fuga2")
+                redirect_url += "?err=invalid"
+
+    return redirect(redirect_url)
+
+@csrf_exempt
+def registration_complete_view(request):
+    err = request.GET.get(key="err", default=None)
+    context = {
+        "err": err,
+        "settings": settings
+    }
+    return render(request, "program/registration_complete.html", context=context)
 
 @csrf_exempt
 def signup_view(request):
     access_token = request.COOKIES.get('access_token')
     return redirect('../')
-    #if access_token:
-    #    return redirect('../')
-    #else:
-    #    labs = Laboratory.objects.all()
-    #    grades = Grade.objects.all()
-    #    context = {
-    #        "labs": labs,
-    #        "grades": grades
-    #    }
-    #    return render(request, "program/signup.html", context=context)
 
 @csrf_exempt
 def signup(request):
@@ -169,13 +190,13 @@ def login(request):
             return redirect("../../login/?err=invalid")
 
         if mode=="reg":
-            response = redirect("../../registration_edit/")
+            response = redirect("../../registration/?mode=edit")
         elif mode=="onsite":
             return redirect("../../")
 
         else: 
             if edit_active:
-                return redirect("../../registration_edit/")
+                return redirect("../../registration/?mode=edit")
             else:
                 return redirect("../../")
 
