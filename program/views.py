@@ -34,20 +34,25 @@ def main(request):
 def registration_view(request):
     mode = request.GET.get(key="mode", default=None)
     err = request.GET.get(key="err", default=None)
+
+    access_token = request.COOKIES.get('access_token')
+    data_access_token = AccessToken.authorize(access_token)
     if mode=="edit":
-        access_token = request.COOKIES.get('access_token')
-        data_access_token = AccessToken.authorize(access_token)
         if not data_access_token:
-            response = redirect("../")
+            response = redirect("../login/?mode=reg")
             response.delete_cookie("access_token")
             return response
-        else:
-            participant = Participant.get_by_id(id=data_access_token.participant_id)
-            program = Program.get_by_participant_id(participant_id=participant.id)
-            participant_form = ParticipantForm(instance=participant)
-            participant_form.fields["password"].widget = HiddenInput()
-            program_form = ProgramForm(instance=program)
+
+        participant = Participant.get_by_id(id=data_access_token.participant_id)
+        program = Program.get_by_participant_id(participant_id=participant.id)
+        participant_form = ParticipantForm(instance=participant)
+        participant_form.fields["password"].widget = HiddenInput()
+        program_form = ProgramForm(instance=program)
     else:
+        if data_access_token:
+            response = redirect("../registration/?mode=edit")
+            return response
+
         participant_form = ParticipantForm()
         program_form = ProgramForm()
     
@@ -73,16 +78,12 @@ def registration(request):
         if key in request_data:
             postdata["program"][key] = request_data[key][0]
     
-    #print(request_data)
-    #print(postdata["participant"])
-    #print(postdata["program"])
     if postdata["program"]["participant"]:  # edit mode
         try:
             with transaction.atomic():
                 participant = Participant.get_by_id(postdata["program"]["participant"])
                 postdata["participant"]["time_modified"] = timezone.now()
                 f_pa = ParticipantForm(postdata["participant"], instance=participant)
-                print(postdata["participant"])
                 if f_pa.is_valid():
                     f_pa.save()
                     if postdata["participant"]["is_presenter"]=="Yes":
@@ -92,13 +93,10 @@ def registration(request):
                         if f_pr.is_valid():
                             f_pr.save()
                         else:
-                            print("hoge1")
                             raise ValueError()
                 else:
-                    print("hoge2")
                     raise ValueError()
         except ValueError as e:
-            print("fuga1")
             redirect_url += "?err=invalid"
 
     else:  # register mode
@@ -118,13 +116,10 @@ def registration(request):
                             if f_pr.is_valid():
                                 new_program = f_pr.save()
                             else:
-                                print("hoge3")
                                 raise ValueError()
                     else:
-                        print("hoge4")
                         raise ValueError()
             except ValueError:
-                print("fuga2")
                 redirect_url += "?err=invalid"
 
     return redirect(redirect_url)
@@ -160,6 +155,17 @@ def signup(request):
 def login_view(request):
     mode = request.GET.get(key="mode", default=None)
     err = request.GET.get(key="err", default=None)
+
+    access_token = request.COOKIES.get('access_token')
+    data_access_token = AccessToken.authorize(access_token)
+    if data_access_token:
+        if mode=="reg":
+            response = redirect("../registration/?mode=edit")
+        elif mode=="onsite":
+            response = redirect("../../")
+        response.delete_cookie("access_token")
+        return response
+
     context = {
         "mode": mode,
         "settings": settings

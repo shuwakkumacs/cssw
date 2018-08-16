@@ -16,7 +16,9 @@
         display: block;
     }
 </style>
-<h2 id="title">CSSW{{ settings.YEAR }}<br>Registration Form</h2>
+<h2 id="title">CSSW{{ settings.YEAR }}<br>
+{{ mode|yesno:"Registration Edit Form,Registration Form" }}
+</h2>
 <form method="post" action="../operation/registration/">
     <div class="card">
         <div class="card-body">
@@ -97,8 +99,8 @@
             </div>
         </div>
     </div>
-    {{ program_form.participant }}
-    <input id="btn-register" class="btn btn-primary" type="submit" value="Register"/>
+    <input name="participant" type="hidden" value="{{ participant_form.initial.id }}" />
+    <input id="btn-register" class="btn btn-{{ mode|yesno:"secondary,primary" }}" type="submit" value="{{ mode|yesno:"Update,Register" }}"/>
 </form>
 <script>
     var togglePresentationInputs = function(){

@@ -25,7 +25,9 @@ SECRET_KEY = 'w+iw(p#a@*pqxbmu2sb4e08km(esu=mj-ect+5%rca3fy#6@b$'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'cssw.r9n.net'
+]
 
 
 # Application definition
