@@ -14,4 +14,5 @@ urlpatterns = [
     url(r'^operation/signup/$', views.signup),
     url(r'^operation/login/$', views.login),
     url(r'^operation/logout/$', views.logout),
+    url(r'^operation/delete_program/$', views.delete_program),
 ]

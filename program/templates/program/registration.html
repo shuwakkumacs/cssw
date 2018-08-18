@@ -15,6 +15,10 @@
         height: 50px;
         display: block;
     }
+    span.required {
+        color: #dc3545;
+        font-weight: bold; 
+    }
 </style>
 <h2 id="title">CSSW{{ settings.YEAR }}<br>
 {{ mode|yesno:"Registration Edit Form,Registration Form" }}
@@ -33,59 +37,53 @@
             <ul style="-webkit-padding-start:20px;margin-bottom:0;">
                 <li>不明な点があれば{{ settings.COMMITTEE_CHAIR.lab }}研{{ settings.COMMITTEE_CHAIR.grade }}{{ settings.COMMITTEE_CHAIR.name }}までご連絡ください。 Please contact {{ settings.COMMITTEE_CHAIR.name_en }} ({{ settings.COMMITTEE_CHAIR.grade }}, {{ settings.COMMITTEE_CHAIR.lab_en }} Lab.) for questions. (Email: <a href="mailto:{{ settings.COMMITTEE_CHAIR.email }}">{{ settings.COMMITTEE_CHAIR.email }}</a>)</li>
                 {% endif %}
-                <li><p class="text-danger" style="margin-bottom:0;">全て必須項目です。（該当なしの場合、姓のみ省略可能） All fields are required (except a surname, if not applicable).</p></li>
+                <li><p class="text-danger" style="margin-bottom:0;">*印は必須項目です。 All fields with * are required.</p></li>
             </ul>
         </div>
     </div>
     <div class="card">
-        <div class="card-header">
-            <h6>基本情報 Personal information</h6>
-        </div>
-        <div class="card-body">
-            <div class="form-group">
-                {{ participant_form.laboratory.label_tag }} {{ participant_form.laboratory }}
+        <div>
+            <div class="card-header">
+                <h6>基本情報 Personal information</h6>
             </div>
-            <div class="form-group">
-                {{ participant_form.grade.label_tag }} {{ participant_form.grade }}
-            </div>
-            <div class="form-group form-group-half">
-                {{ participant_form.surname.label_tag }} {{ participant_form.surname }}
-            </div>
-            <div class="form-group form-group-half">
-                {{ participant_form.givenname.label_tag }} {{ participant_form.givenname }}
-            </div>
-            <div class="clear"></div>
-            <div class="form-group">
-                {{ participant_form.email.label_tag }} {{ participant_form.email }}
-            </div>
-            <div class="form-group">
-                {% if mode != "edit" %}
-                {{ participant_form.password.label_tag }}
-                {% endif %}
-                {{ participant_form.password }}
-                {% if mode != "edit" %}
-                <small class="form-text text-muted">*登録情報の変更および当日の参加にログインが必要となります。 Log-in will be required for editing registration and on-site participation.</small>
-                {% endif %}
-            </div>
-            <div class="form-group">
-                {{ participant_form.is_presenter.label_tag }} {{ participant_form.is_presenter }}
+            <div class="card-body">
+                <div class="form-group">
+                    {{ participant_form.laboratory.label_tag }} {{ participant_form.laboratory }}
+                </div>
+                <div class="form-group">
+                    {{ participant_form.grade.label_tag }} {{ participant_form.grade }}
+                </div>
+                <div class="form-group form-group-half">
+                    {{ participant_form.surname.label_tag }} {{ participant_form.surname }}
+                </div>
+                <div class="form-group form-group-half">
+                    {{ participant_form.givenname.label_tag }} {{ participant_form.givenname }}
+                </div>
+                <div class="clear"></div>
+                <div class="form-group">
+                    {{ participant_form.email.label_tag }} {{ participant_form.email }}
+                </div>
+                <div class="form-group">
+                    {% if mode != "edit" %}
+                    {{ participant_form.password.label_tag }}
+                    {% endif %}
+                    {{ participant_form.password }}
+                    {% if mode != "edit" %}
+                    <small class="form-text text-muted">*登録情報の変更および当日の参加にログインが必要となります。 Log-in will be required for editing registration and on-site participation.</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ participant_form.is_presenter.label_tag }} {{ participant_form.is_presenter }}
+                </div>
             </div>
         </div>
     </div>
     <div class="card card-presentation">
-        <div class="card-header">
-            <h6>発表情報 Presentation information</h6>
+        <div class="card-presentation-wrapper">
         </div>
-        <div class="card-body">
-            <div class="form-group">
-                {{ program_form.title.label_tag }} {{ program_form.title }}
-            </div>
-            <div class="form-group">
-                {{ program_form.session_category.label_tag }} {{ program_form.session_category }}
-                <small class="form-text text-muted">*指導教員と相談の上選択して下さい。 Please be sure to consult with your advisor before selecting.</small>
-            </div>
-            <div class="form-group">
-                {{ program_form.require_table.label_tag }} {{ program_form.require_table }}
+        <div class="card-add-presentation">
+            <div class="card-body" style="padding-top:0">
+                <a href="javascript:presentationCardTag()" id="add-presentation">+ Add presentation</a>
             </div>
         </div>
     </div>
@@ -97,25 +95,117 @@
             <div class="form-group">
                 {{ participant_form.party_attendance.label_tag }} {{ participant_form.party_attendance }}
             </div>
+            <div class="form-group">
+                {{ participant_form.food_restriction.label_tag }} {{ participant_form.food_restriction }}
+                <small class="form-text text-muted">*「あり」を選んだ場合、後日メールで個別に連絡する場合があります。 If you choose "Yes", you might be contacted directly via email.</small>
+            </div>
+            <div class="form-group">
+                {{ participant_form.comment.label_tag }} {{ participant_form.comment }}
+            </div>
         </div>
     </div>
     <input name="participant" type="hidden" value="{{ participant_form.initial.id }}" />
     <input id="btn-register" class="btn btn-{{ mode|yesno:"secondary,primary" }}" type="submit" value="{{ mode|yesno:"Update,Register" }}"/>
 </form>
 <script>
+    $.fn.appendAttr = function(attrName, suffix) {
+        this.attr(attrName, function(i, val) {
+            return val + suffix;
+        });
+        return this;
+    };
+    {% for program_form in program_forms %}
+    var tag = `
+        <div class="card-header card-pre-{{ forloop.counter }}">
+            <h6>発表情報{{ forloop.counter }} Presentation information {{ forloop.counter }}
+        {% if forloop.counter != 1 %}
+        <a href="javascript:removePresentationCardTag({{ forloop.counter }}, {{ program_form.initial.id }})" style="font-size:0.8em;">削除 Remove</a>
+        {% endif %}
+        </h6>
+        </div>
+        <div class="card-body card-pre-{{ forloop.counter }}">
+            <div class="form-group">
+                {{ program_form.title.label_tag }} {{ program_form.title }}
+            </div>
+            <div class="form-group">
+                {{ program_form.session_category.label_tag }} {{ program_form.session_category }}
+                <small class="form-text text-muted">*指導教員と相談の上選択して下さい。 Please be sure to consult with your advisor before selecting.</small>
+            </div>
+            <div class="form-group">
+                {{ program_form.require_table.label_tag }} {{ program_form.require_table }}
+            </div>
+            <input type="hidden" name="program_id" value="{{ program_form.initial.id }}" />
+        </div>
+    `;
+    $tag = $(tag).find("label").appendAttr("for", "_{{ forloop.counter }}").end()
+                 .find("input, select").appendAttr("id", "_{{ forloop.counter }}").end();
+    $(".card-presentation-wrapper").append($tag);
+    {% endfor %}
+
+    var idx = {{ program_forms|length }} + 1;
     var togglePresentationInputs = function(){
         var val = $("select[name=is_presenter]").val();
         var $elems = $(".card-presentation").find("select,input");
         if(val=="Yes") {
             $elems.prop("disabled", false);
             $elems.prop("required", true);
+            $("#add-presentation").attr("href","javascript:presentationCardTag()");
         }
         else {
             $elems.prop("disabled", true);
             $elems.prop("required", false);
+            $("#add-presentation").removeAttr("href");
+        }
+        setRequired();
+    };
+    $("select[name=is_presenter]").on("change", togglePresentationInputs);
+
+    var presentationCardTag = function(){ 
+        var removeLink = '<a href="javascript:removePresentationCardTag('+idx+')" style="font-size:0.8em;">削除 Remove</a>';
+        var tag = `
+            <div class="card-header card-pre-`+ idx +`">
+                <h6>発表情報` + idx + ` Presentation information ` + idx + ` `+removeLink+`</h6>
+            </div>
+            <div class="card-body card-pre-`+ idx +`">
+                <div class="form-group">
+                    {{ program_form_empty.title.label_tag }} {{ program_form_empty.title }}
+                </div>
+                <div class="form-group">
+                    {{ program_form_empty.session_category.label_tag }} {{ program_form_empty.session_category }}
+                    <small class="form-text text-muted">*指導教員と相談の上選択して下さい。 Please be sure to consult with your advisor before selecting.</small>
+                </div>
+                <div class="form-group">
+                    {{ program_form_empty.require_table.label_tag }} {{ program_form_empty.require_table }}
+                </div>
+            </div>
+            <input type="hidden" name="program_id" value="-1" />
+        `;
+        $(".card-presentation-wrapper").append($(tag).find("label").appendAttr("for", "_"+idx).end()
+                                                     .find("input, select").appendAttr("id", "_"+idx).end());
+        idx++;
+        setRequired();
+    };
+    var removePresentationCardTag = function(i, program_id){
+        if(confirm("本当によろしいですか？この動作は取り消せません。 Are you sure to remove? This cannot be undone.")){
+            $(".card-pre-"+i).remove();
+            idx--;
+            setRequired();
+            if(program_id){
+                $.post({
+                    "url": "../operation/delete_program/",
+                    "data": {"id": program_id}
+                });
+            }
         }
     };
+    var setRequired = function(){
+        var $label_all = $("input, select").parent().find("label")
+        var $label_req = $("input:required, select:required").parent().find("label");
+        $label_all.find("span.required").remove();
+        $label_req.append('<span class="required"> *</span>');
+    };
+    if(idx==1) presentationCardTag();
     togglePresentationInputs();
-    $("select[name=is_presenter]").on("change", togglePresentationInputs);
+    setRequired();
 </script>
 {% endblock %}

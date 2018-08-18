@@ -2,6 +2,7 @@ from django.db import models
 import string
 import hashlib
 import random
+from django.utils import timezone
 
 GRADE_CHOICES = (
     ("F", "Faculty"),
@@ -24,6 +25,11 @@ LABORATORY_CHOICES = (
 )
 
 PRESENTER_CHOICES = (
+    ("Yes", "あり Yes"),
+    ("No", "なし No")
+)
+
+FOOD_RESTRICTION_CHOICES = (
     ("Yes", "あり Yes"),
     ("No", "なし No")
 )
@@ -53,6 +59,8 @@ class Participant(models.Model):
     password = models.CharField(max_length=200, default="", verbose_name="パスワード Password")
     is_presenter = models.CharField(max_length=10, choices=PRESENTER_CHOICES, verbose_name="発表の有無 Are you a presenter?")
     party_attendance = models.CharField(max_length=10, choices=PARTY_ATTENDANCE_CHOICES, verbose_name="懇親会の参加 Dinner party")
+    food_restriction = models.CharField(max_length=10, choices=FOOD_RESTRICTION_CHOICES, verbose_name="食物制限の有無 Do you have any food restriction?")
+    comment = models.TextField(blank=True)
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_modified = models.DateTimeField(blank=True, null=True)
 
@@ -106,14 +114,25 @@ class Program(models.Model):
     require_table = models.CharField(max_length=10, choices=REQUIRE_TABLE_CHOICES, verbose_name="デモ用テーブルの用意 Demo table")
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_modified = models.DateTimeField(blank=True, null=True)
+    time_deleted = models.DateTimeField(blank=True, null=True)
 
     def add(request_data):
         data_program = Program(**request_data)
         data_program.save()
         return data_program
 
+    def get_by_id(id):
+        return Program.objects.filter(id=id).first()
+
     def get_by_participant_id(participant_id):
-        return Program.objects.filter(participant_id=participant_id).first()
+        return Program.objects.filter(participant_id=participant_id, time_deleted=None).all()
+
+    def delete_by_id(id):
+        print(id)
+        program = Program.objects.filter(id=id).first()
+        program.time_deleted = timezone.now()
+        program.save()
+        return program
 
 class ProgramHistory(models.Model):
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE, null=True)

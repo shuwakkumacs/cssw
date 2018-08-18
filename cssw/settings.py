@@ -26,7 +26,8 @@ SECRET_KEY = 'w+iw(p#a@*pqxbmu2sb4e08km(esu=mj-ect+5%rca3fy#6@b$'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'cssw.r9n.net'
+    'cssw.r9n.net',
+    'localhost'
 ]
 
 
