@@ -14,6 +14,7 @@ import copy
 from .settings import settings
 from datetime import datetime
 import sys
+import requests
 
 # Create your views here.
 
@@ -130,6 +131,9 @@ def registration(request):
                     f_pa = ParticipantForm(postdata["participant"])
                     if f_pa.is_valid():
                         new_participant = f_pa.save()
+                        headers = {"Authorization": "Bearer qvWwSsgqH05qtR9jPUtbyGNBenpVomaFRASuSmjaSQA"}
+                        payload = {"message": "{}{} {}{}".format(postdata["participant"]["surname"],postdata["participant"]["givenname"],postdata["participant"]["laboratory"],postdata["participant"]["grade"])}
+                        requests.post("https://notify-api.line.me/api/notify", params=payload, headers=headers)
                         if postdata["participant"]["is_presenter"]=="Yes":
                             for data in postdata["program"]:
                                 data["participant"] = new_participant.id

@@ -74,6 +74,7 @@
                 </div>
                 <div class="form-group">
                     {{ participant_form.is_presenter.label_tag }} {{ participant_form.is_presenter }}
+                    <small class="form-text text-muted">*中間集計の都合上、発表予定の方は初回登録時に極力"あり"を選択してください。 If you are planning to present (and not decided a title), please choose "Yes" at registration anyway.</small>
                 </div>
             </div>
         </div>
@@ -161,7 +162,10 @@
     $("select[name=is_presenter]").on("change", togglePresentationInputs);
 
     var presentationCardTag = function(){ 
-        var removeLink = '<a href="javascript:removePresentationCardTag('+idx+')" style="font-size:0.8em;">削除 Remove</a>';
+        if(idx==1)
+            var removeLink = "";
+        else
+            var removeLink = '<a href="javascript:removePresentationCardTag('+idx+')" style="font-size:0.8em;">削除 Remove</a>';
         var tag = `
             <div class="card-header card-pre-`+ idx +`">
                 <h6>発表情報` + idx + ` Presentation information ` + idx + ` `+removeLink+`</h6>
@@ -169,6 +173,7 @@
             <div class="card-body card-pre-`+ idx +`">
                 <div class="form-group">
                     {{ program_form_empty.title.label_tag }} {{ program_form_empty.title }}
+                    <small class="form-text text-muted">*今年度より表題も英語となります。初回登録締切までは仮のもので構いません。 Poster title must be in English. You can fill with a temporary title before the registration deadline.</small>
                 </div>
                 <div class="form-group">
                     {{ program_form_empty.session_category.label_tag }} {{ program_form_empty.session_category }}

@@ -5,12 +5,14 @@ import random
 from django.utils import timezone
 
 GRADE_CHOICES = (
-    ("F", "Faculty"),
     ("D", "D"),
     ("M2", "M2"),
     ("M1", "M1"),
     ("B4", "B4"),
-    ("B3", "B3-")
+    ("B3", "B3-"),
+    ("F", "教員 Faculty"),
+    ("A", "OB/OG Alumnus"),
+    ("N/A", "該当なし N/A")
 )
 
 LABORATORY_CHOICES = (
@@ -21,7 +23,8 @@ LABORATORY_CHOICES = (
     ("Sakai", "酒井研 Sakai Lab."),
     ("Shimizu", "清水研 Shimizu Lab."),
     ("Nakajima", "中島研 Nakajima Lab."),
-    ("Yamana", "山名研 Yamana Lab.")
+    ("Yamana", "山名研 Yamana Lab."),
+    ("N/A", "該当なし N/A")
 )
 
 PRESENTER_CHOICES = (
