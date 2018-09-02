@@ -53,11 +53,20 @@
                 <div class="form-group">
                     {{ participant_form.grade.label_tag }} {{ participant_form.grade }}
                 </div>
+                <div>氏名（日本語）</div>
                 <div class="form-group form-group-half">
                     {{ participant_form.surname.label_tag }} {{ participant_form.surname }}
                 </div>
                 <div class="form-group form-group-half">
                     {{ participant_form.givenname.label_tag }} {{ participant_form.givenname }}
+                </div>
+                <div class="clear"></div>
+                <div>Name (English)</div>
+                <div class="form-group form-group-half">
+                    {{ participant_form.surname_en.label_tag }} {{ participant_form.surname_en }}
+                </div>
+                <div class="form-group form-group-half">
+                    {{ participant_form.givenname_en.label_tag }} {{ participant_form.givenname_en }}
                 </div>
                 <div class="clear"></div>
                 <div class="form-group">

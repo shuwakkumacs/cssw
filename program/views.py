@@ -71,7 +71,7 @@ def registration_view(request):
 @csrf_exempt
 def registration(request):
     request_data = dict(request.POST)
-    participant_keys = ["laboratory", "grade", "surname", "givenname", "email", "password", "party_attendance", "is_presenter", "food_restriction", "comment"]
+    participant_keys = ["laboratory", "grade", "surname", "givenname", "surname_en", "givenname_en", "email", "password", "party_attendance", "is_presenter", "food_restriction", "comment"]
     program_keys = ["program_id", "title", "session_category", "require_table"]
 
     redirect_url = "../../registration_complete/"
@@ -236,6 +236,19 @@ def login(request):
 
     else:
         return redirect("../../login/?mode={}&err=unauthorized".format(mode))
+
+@csrf_exempt
+def registration_list_view(request):
+    context = {
+        "settings": settings
+    }
+    return render(request, "program/registration_list.html", context=context)
+
+@csrf_exempt
+def get_registration_list(request):
+    request_data = dict(request.POST)
+    program = Program.get_with_participants(**request_data)
+    return JsonResponse(program)
 
 @csrf_exempt
 def delete_program(request):

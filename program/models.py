@@ -54,8 +54,10 @@ SESSION_CATEGORY_CHOICES = (
 )
 
 class Participant(models.Model):
-    surname = models.CharField(max_length=50, default="", verbose_name="姓 Surname", blank=True)
-    givenname = models.CharField(max_length=50, default="", verbose_name="名 Given name")
+    surname = models.CharField(max_length=50, default="", verbose_name="姓", blank=True)
+    givenname = models.CharField(max_length=50, default="", verbose_name="名")
+    surname_en = models.CharField(max_length=50, default="", verbose_name="Surname", blank=True)
+    givenname_en = models.CharField(max_length=50, default="", verbose_name="Given name")
     laboratory = models.CharField(max_length=50, choices=LABORATORY_CHOICES, verbose_name="所属研究室 Laboratory")
     grade = models.CharField(max_length=10, choices=GRADE_CHOICES, verbose_name="学年 Grade")
     email = models.CharField(max_length=500, default="", verbose_name="Eメールアドレス Email address")
