@@ -9,7 +9,62 @@
         margin-bottom: 0;
     }
 </style>
-{{ form }}
+<select id="labs" class="form-control" style="width:auto; min-width:30%;">
+    <option value="">-- 研究室選択 --</option>
+    <option value="Ishikawa">石川研</option>
+    <option value="Ogawa">小川研</option>
+    <option value="Katto">甲藤研</option>
+    <option value="Kobayashi">小林研</option>
+    <option value="Sakai">酒井研</option>
+    <option value="Shimizu">清水研</option>
+    <option value="Nakajima">中島研</option>
+    <option value="Yamana">山名研</option>
+</select>
+<br>
+<table class="table" style="background:white;">
+    <tr>
+        <th scope="col">#</th>
+        <th scope="col">研究室</th>
+        <th scope="col">学年</th>
+        <th scope="col">姓</th>
+        <th scope="col">名</th>
+        <th scope="col">姓(英)</th>
+        <th scope="col">名(英)</th>
+        <th scope="col">懇親会参加</th>
+        <th scope="col">発表</th>
+        <th scope="col">表題</th>
+        <th scope="col">セッション区分</th>
+        <th scope="col">テーブルの有無</th>
+        <th scope="col">セッション番号</th>
+        <th scope="col">プログラム番号</th>
+    </tr>
+{% for program in programs %}
+    <tr>
+        <th scope="row">{{ program.id }}</th>
+        <td>{{ program.participant.laboratory }}</td>
+        <td>{{ program.participant.grade }}</td>
+        <td>{{ program.participant.surname }}</td>
+        <td>{{ program.participant.givenname }}</td>
+        <td>{{ program.participant.surname_en }}</td>
+        <td>{{ program.participant.givenname_en }}</td>
+        <td>{{ program.participant.party_attendance }}</td>
+        <td>{{ program.participant.is_presenter }}</td>
+        {% if program.participant.is_presenter == "Yes" %}
+        <td>{{ program.title }}</td>
+        <td>{{ program.session_category }}</td>
+        <td>{{ program.require_table }}</td>
+        <td>{{ program.session_number }}</td>
+        <td>{{ program.program_number }}</td>
+        {% else %}
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        {% endif %}
+    </tr>
+{% endfor %}
+</table>
 <!-- <div id="card-wrapper">
     <div class="card">
         <div class="card-header session-header">
@@ -34,4 +89,28 @@
         </ul>
     </div>
 </div> -->
+<script>
+var getUrlVars = function(){
+    var vars = {}; 
+    var param = location.search.substring(1).split('&');
+    for(var i = 0; i < param.length; i++) {
+        var keySearch = param[i].search(/=/);
+        var key = '';
+        if(keySearch != -1) key = param[i].slice(0, keySearch);
+        var val = param[i].slice(param[i].indexOf('=', 0) + 1);
+        if(key != '') vars[key] = decodeURI(val);
+    } 
+    return vars; 
+}
+    $("#labs").val(getUrlVars()["laboratory"]);
+    $("#labs").on("change", function(){
+        window.location.href = "./?laboratory="+$(this).val();
+    });
+//    $.get({
+//        "url": "../operation/registration_list/?laboratory=Ogawa",
+//        "success": function(data){
+//            console.log(data);
+//        }
+//    });
+</script>
 {% endblock %}

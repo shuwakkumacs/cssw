@@ -6,6 +6,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.db.models import Q
+from django.core import serializers
+from django.views.decorators.cache import never_cache
 from .models import *
 from .forms import *
 import json
@@ -15,6 +17,7 @@ from .settings import settings
 from datetime import datetime
 import sys
 import requests
+import base64
 
 # Create your views here.
 
@@ -237,18 +240,23 @@ def login(request):
     else:
         return redirect("../../login/?mode={}&err=unauthorized".format(mode))
 
+@never_cache
 @csrf_exempt
 def registration_list_view(request):
+    #if not _basicAuth(request):
+    #    return _http401()
+    laboratory = request.GET.get(key="laboratory", default=None)
+    programs = Program.get_with_participants(laboratory=laboratory)
+    print(programs)
     context = {
-        "settings": settings
+        "settings": settings,
+        "programs": programs
     }
     return render(request, "program/registration_list.html", context=context)
 
 @csrf_exempt
 def get_registration_list(request):
-    request_data = dict(request.POST)
-    program = Program.get_with_participants(**request_data)
-    return JsonResponse(program)
+    return JsonResponse(json.loads(serializers.serialize('json',program)), safe=False)
 
 @csrf_exempt
 def delete_program(request):
@@ -256,6 +264,25 @@ def delete_program(request):
     program_id = request_data["id"][0]
     Program.delete_by_id(program_id)
     return HttpResponse("")
+
+def _basicAuth(request):
+    if 'HTTP_AUTHORIZATION' not in request.META:
+        return False
+    (authscheme, base64_idpass) = request.META['HTTP_AUTHORIZATION'].split(' ', 1)
+    if authscheme.lower() != 'basic':
+        return _http401()
+    idpass = base64.decodestring(base64_idpass.strip().encode('ascii')).decode('ascii')
+    (id_, password) = idpass.split(':', 1)
+    if id_ == "foo" and password == "bar":
+        return True
+    else:
+        return False
+
+def _http401():
+    response = HttpResponse("Unauthorized", status=401)
+    response['WWW-Authenticate'] = 'Basic realm="basic auth test"'
+
+    return response
 
 # Only for development
 @csrf_exempt
