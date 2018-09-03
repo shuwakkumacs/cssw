@@ -21,7 +21,7 @@
     <option value="Yamana">山名研</option>
 </select>
 <br>
-<table class="table" style="background:white;">
+<table class="table" style="background:white;width:150%;">
     <tr>
         <th scope="col">#</th>
         <th scope="col">研究室</th>
@@ -32,8 +32,8 @@
         <th scope="col">名(英)</th>
         <th scope="col">懇親会参加</th>
         <th scope="col">発表</th>
-        <th scope="col">表題</th>
         <th scope="col">セッション区分</th>
+        <th scope="col">表題</th>
         <th scope="col">テーブルの有無</th>
         <th scope="col">セッション番号</th>
         <th scope="col">プログラム番号</th>
@@ -50,8 +50,8 @@
         <td>{{ program.participant.party_attendance }}</td>
         <td>{{ program.participant.is_presenter }}</td>
         {% if program.participant.is_presenter == "Yes" %}
-        <td>{{ program.title }}</td>
         <td>{{ program.session_category }}</td>
+        <td>{{ program.title }}</td>
         <td>{{ program.require_table }}</td>
         <td>{{ program.session_number }}</td>
         <td>{{ program.program_number }}</td>
