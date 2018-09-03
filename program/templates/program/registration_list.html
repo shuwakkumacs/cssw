@@ -41,15 +41,15 @@
 {% for program in programs %}
     <tr>
         <th scope="row">{{ program.id }}</th>
-        <td>{{ program.participant.laboratory }}</td>
-        <td>{{ program.participant.grade }}</td>
-        <td>{{ program.participant.surname }}</td>
-        <td>{{ program.participant.givenname }}</td>
-        <td>{{ program.participant.surname_en }}</td>
-        <td>{{ program.participant.givenname_en }}</td>
-        <td>{{ program.participant.party_attendance }}</td>
-        <td>{{ program.participant.is_presenter }}</td>
-        {% if program.participant.is_presenter == "Yes" %}
+        <td>{{ program.laboratory }}</td>
+        <td>{{ program.grade }}</td>
+        <td>{{ program.surname }}</td>
+        <td>{{ program.givenname }}</td>
+        <td>{{ program.surname_en }}</td>
+        <td>{{ program.givenname_en }}</td>
+        <td>{{ program.party_attendance }}</td>
+        <td>{{ program.is_presenter }}</td>
+        {% if program.is_presenter == "Yes" %}
         <td>{{ program.session_category }}</td>
         <td>{{ program.title }}</td>
         <td>{{ program.require_table }}</td>

@@ -247,7 +247,8 @@ def registration_list_view(request):
     #    return _http401()
     laboratory = request.GET.get(key="laboratory", default=None)
     programs = Program.get_with_participants(laboratory=laboratory)
-    print(programs)
+    for program in programs:
+        print(program.__dict__)
     context = {
         "settings": settings,
         "programs": programs
