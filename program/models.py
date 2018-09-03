@@ -143,8 +143,8 @@ class Program(models.Model):
     def get_with_participants(laboratory=""):
         if laboratory != "":
             #data_all = Program.objects.filter(participant__laboratory=laboratory,time_deleted=None).values("participant__id","participant__surname","participant__givenname","participant__surname_en","participant__givenname_en").all()
-            #data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join program_program as pr on pa.id=pr.participant_id where pa.laboratory='Ogawa' and pr.time_deleted is null;")
-            data_all = Program.objects.filter(participant__laboratory=laboratory).filter(time_deleted=None).select_related("participant").all()
+            data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join program_program as pr on pa.id=pr.participant_id where pa.laboratory='{}' and pr.time_deleted is null;".format(laboratory))
+            #data_all = Program.objects.filter(participant__laboratory=laboratory).filter(time_deleted=None).select_related("participant").all()
         else:
             data_all = Program.objects.filter(time_deleted=None).select_related("participant").all()
         return data_all
