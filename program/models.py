@@ -148,7 +148,8 @@ class Program(models.Model):
             #data_all = Program.objects.filter(participant__isnull=True).all()
             #data_all = Participant.objects.select_related("program").all()
         else:
-            data_all = Program.objects.filter(participant__program__isnull=True).filter(time_deleted=None)
+            #data_all = Program.objects.filter(participant__program__isnull=True).filter(time_deleted=None)
+            data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join program_program as pr on pa.id=pr.participant_id where pr.time_deleted is null;".format(laboratory))
             #data_all = Program.objects.filter(time_deleted=None).select_related("participant").all()
         return data_all
 
