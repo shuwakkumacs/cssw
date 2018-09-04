@@ -117,6 +117,7 @@ class Program(models.Model):
     program_number = models.IntegerField(null=True, blank=True, verbose_name="プログラム番号 Program number")
     session_category = models.CharField(max_length=100, choices=SESSION_CATEGORY_CHOICES, verbose_name="セッション種別 Session category")
     require_table = models.CharField(max_length=10, choices=REQUIRE_TABLE_CHOICES, verbose_name="デモ用テーブルの用意 Demo table")
+    co_presenters = models.CharField(max_length=300, null=True, blank=True, verbose_name="共同発表者 Co-presenters")
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_modified = models.DateTimeField(blank=True, null=True)
     time_deleted = models.DateTimeField(blank=True, null=True)

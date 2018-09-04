@@ -75,7 +75,7 @@ def registration_view(request):
 def registration(request):
     request_data = dict(request.POST)
     participant_keys = ["laboratory", "grade", "surname", "givenname", "surname_en", "givenname_en", "email", "password", "party_attendance", "is_presenter", "food_restriction", "comment"]
-    program_keys = ["program_id", "title", "session_category", "require_table"]
+    program_keys = ["program_id", "title", "session_category", "require_table", "co_presenters"]
 
     redirect_url = "../../registration_complete/"
 

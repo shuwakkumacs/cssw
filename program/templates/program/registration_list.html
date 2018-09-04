@@ -34,6 +34,7 @@
         <th scope="col">発表</th>
         <th scope="col">セッション区分</th>
         <th scope="col">表題</th>
+        <th scope="col">共同発表者</th>
         <th scope="col">テーブルの有無</th>
         <th scope="col">セッション番号</th>
         <th scope="col">プログラム番号</th>
@@ -52,6 +53,7 @@
         {% if program.is_presenter == "Yes" %}
         <td>{{ program.session_category }}</td>
         <td>{{ program.title }}</td>
+        <td>{{ program.co_presenters }}</td>
         <td>{{ program.require_table }}</td>
         <td>{{ program.session_number }}</td>
         <td>{{ program.program_number }}</td>

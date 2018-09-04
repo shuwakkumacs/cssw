@@ -83,7 +83,7 @@
                 </div>
                 <div class="form-group">
                     {{ participant_form.is_presenter.label_tag }} {{ participant_form.is_presenter }}
-                    <small class="form-text text-muted">*中間集計の都合上、発表予定の方は初回登録時に極力"あり"を選択してください。 If you are planning to present (and not decided a title), please choose "Yes" at registration anyway.</small>
+                    <small class="form-text text-muted">*中間集計の都合上、（代表発表者として）発表予定の方は初回登録時に極力"あり"を選択してください。 If you are planning to present (as the first presenter), please choose "Yes" for your first-time registration.</small>
                 </div>
             </div>
         </div>
@@ -144,6 +144,10 @@
             <div class="form-group">
                 {{ program_form.require_table.label_tag }} {{ program_form.require_table }}
             </div>
+            <div class="form-group">
+                {{ program_form.co_presenters.label_tag }} {{ program_form.co_presenters }}
+                <small class="form-text text-muted">*カンマ(,)区切りで入力して下さい。 Separate by comma(,).</small>
+            </div>
             <input type="hidden" name="program_id" value="{{ program_form.initial.id }}" />
         </div>
     `;
@@ -156,14 +160,15 @@
     var togglePresentationInputs = function(){
         var val = $("select[name=is_presenter]").val();
         var $elems = $(".card-presentation").find("select,input");
+        var $elems_req = $(".card-presentation").find("#id_title_1, #id_session_category_1, #id_require_table_1");
         if(val=="Yes") {
             $elems.prop("disabled", false);
-            $elems.prop("required", true);
+            $elems_req.prop("required", true);
             $("#add-presentation").attr("href","javascript:presentationCardTag()");
         }
         else {
             $elems.prop("disabled", true);
-            $elems.prop("required", false);
+            $elems_req.prop("required", false);
             $("#add-presentation").removeAttr("href");
         }
         setRequired();
@@ -190,6 +195,10 @@
                 </div>
                 <div class="form-group">
                     {{ program_form_empty.require_table.label_tag }} {{ program_form_empty.require_table }}
+                </div>
+                <div class="form-group">
+                    {{ program_form_empty.co_presenters.label_tag }} {{ program_form_empty.co_presenters }}
+                    <small class="form-text text-muted">*カンマ(,)区切りで入力して下さい。 Separate by comma(,).</small>
                 </div>
             </div>
             <input type="hidden" name="program_id" value="-1" />
