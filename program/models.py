@@ -60,6 +60,8 @@ class Participant(models.Model):
     givenname_en = models.CharField(max_length=50, default="", verbose_name="Given name")
     laboratory = models.CharField(max_length=50, choices=LABORATORY_CHOICES, verbose_name="所属研究室 Laboratory")
     grade = models.CharField(max_length=10, choices=GRADE_CHOICES, verbose_name="学年 Grade")
+    affiliation = models.CharField(max_length=50, blank=True, verbose_name="ご所属 Affiliation")
+    reference = models.CharField(max_length=50, blank=True, verbose_name="紹介者 Reference name")
     email = models.CharField(max_length=500, default="", verbose_name="Eメールアドレス Email address")
     password = models.CharField(max_length=200, default="", verbose_name="パスワード Password")
     is_presenter = models.CharField(max_length=10, choices=PRESENTER_CHOICES, verbose_name="発表の有無 Are you a presenter?")

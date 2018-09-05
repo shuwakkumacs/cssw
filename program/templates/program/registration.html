@@ -53,6 +53,12 @@
                 <div class="form-group">
                     {{ participant_form.grade.label_tag }} {{ participant_form.grade }}
                 </div>
+                <div class="form-group" style="display:none;">
+                    {{ participant_form.affiliation.label_tag }}<span class="required"> *</span> {{ participant_form.affiliation }}
+                </div>
+                <div class="form-group" style="display:none;">
+                    {{ participant_form.reference.label_tag }}<span class="required"> *</span> {{ participant_form.reference }}
+                </div>
                 <div>氏名（日本語）</div>
                 <div class="form-group form-group-half">
                     {{ participant_form.surname.label_tag }}<span class="required"> *</span> {{ participant_form.surname }}
@@ -174,6 +180,17 @@
         setRequired();
     };
     $("select[name=is_presenter]").on("change", togglePresentationInputs);
+    $("select[name=laboratory],select[name=grade]").on("change", function(){
+        console.log("change");
+        if($("select[name=laboratory]").val()=="N/A" && $("select[name=grade]").val()=="N/A"){
+            console.log("hoge");
+            $("input[name=affiliation]").parent().show();
+            $("input[name=reference]").parent().show();
+        } else {
+            $("input[name=affiliation]").parent().hide();
+            $("input[name=reference]").parent().hide();
+        }
+    });
 
     var presentationCardTag = function(){ 
         if(idx==1)
