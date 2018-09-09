@@ -80,6 +80,10 @@ class Participant(models.Model):
         return Participant.objects.filter(id=id).first()
 
     @staticmethod
+    def get_by_email(email):
+        return Participant.objects.filter(email=email).first()
+
+    @staticmethod
     def add(request_data):
         request_data["password"] = md5(request_data["password"])
         del request_data["password"]
@@ -173,6 +177,44 @@ class Vote(models.Model):
     cancelled = models.IntegerField(default=0)
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_cancelled = models.DateTimeField(blank=True, null=True)
+
+class PasswordResetSession(models.Model):
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE, null=True)
+    reset_token = models.CharField(max_length=100, default="")
+    time_created = models.DateTimeField(auto_now_add=True, blank=True)
+    time_completed = models.DateTimeField(blank=True, null=True)
+
+    @staticmethod
+    def add(participant):
+        reset_token = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(16))
+        PasswordResetSession(participant=participant,reset_token=reset_token).save()
+        return reset_token
+
+    @staticmethod
+    def get_by_id(id):
+        return PasswordResetSession.objects.filter(id=id).first()
+
+    @staticmethod
+    def get(reset_token):
+        return PasswordResetSession.objects.filter(reset_token=reset_token).last()
+
+    @staticmethod
+    def change_password(id,password):
+        session = PasswordResetSession.get_by_id(id=id)
+        if session.time_completed is not None:
+            return False
+        try:
+            now = timezone.now()
+            participant = session.participant
+            participant.password = md5(password)
+            participant.time_modified = now
+            participant.save()
+            session.time_completed = now
+            session.save()
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
 def md5(s):
     return hashlib.md5(s.encode("utf-8")).hexdigest()

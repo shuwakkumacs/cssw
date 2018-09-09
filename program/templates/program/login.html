@@ -13,6 +13,13 @@
 
 <h2 id="title">CSSW{{ settings.YEAR }}<br>Registration Form</h2>
 <form method="post" action="../operation/login/?mode={{ mode }}">
+    <div class="card">
+        <div class="card-body">
+            <ul style="-webkit-padding-start:20px;margin-bottom:0;">
+                <li>パスワードを忘れた方は<a href="/password_forget/">こちら</a>。 Click <a href="/password_forget/">here</a> when you forget your password.</li>
+            </ul>
+        </div>
+    </div>
     {% if errmsg %}
     <div class="alert alert-danger">
         {{ errmsg }}
