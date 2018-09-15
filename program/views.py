@@ -71,7 +71,7 @@ def registration_view(request):
         program_forms = []
 
     if settings["EXPIRATION"]["registration"] and (settings["EXPIRATION"]["registration_date"]-datetime.now()).total_seconds()<0:
-        participant_form.initial["is_presenter"] = "No"
+        #participant_form.initial["is_presenter"] = "No"
         participant_form.fields["is_presenter"].widget.attrs["readonly"] = "readonly"
     
     context = {

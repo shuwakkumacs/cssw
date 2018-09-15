@@ -245,7 +245,6 @@
         $label_req.append('<span class="required"> *</span>');
     };
     if(idx==1) presentationCardTag();
-    togglePresentationInputs();
     setRequired();
 
     $("#id_is_presenter").on("mousedown",function(e){
@@ -253,5 +252,10 @@
             return false;
         }
     });
+    togglePresentationInputs();
+    if($("#id_is_presenter").attr("readonly")){
+        $("#add-presentation").attr("href", "javascript:void(0);");
+        $(".card-presentation-wrapper a").attr("href", "javascript:void(0);");
+    }
 </script>
 {% endblock %}
