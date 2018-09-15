@@ -294,7 +294,7 @@ def password_change(request):
     password = request_data["password"][0]
     ret = PasswordResetSession.change_password(id=session_id,password=password)
     if ret:
-        return HttpResponse("パスワードの変更を完了しました。 Your password has been changed.")
+        return HttpResponse("パスワードの変更を完了しました。 Your password has been changed.<br><br><a href='/login/?mode=reg'>ログイン Log in</a>")
     else:
         return HttpResponse("パスワードの変更にエラーが発生しました。 Error occurred while changing password.")
 
