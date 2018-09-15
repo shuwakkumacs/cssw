@@ -2,6 +2,7 @@
 from django.forms import *
 from django.forms.widgets import *
 from .models import *
+from .settings import settings  
 
 class ParticipantForm(ModelForm):
     def __init__(self, *args, **kwargs):

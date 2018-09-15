@@ -69,6 +69,10 @@ def registration_view(request):
 
         participant_form = ParticipantForm()
         program_forms = []
+
+    if settings["EXPIRATION"]["registration"] and (settings["EXPIRATION"]["registration_date"]-datetime.now()).total_seconds()<0:
+        participant_form.initial["is_presenter"] = "No"
+        participant_form.fields["is_presenter"].widget.attrs["readonly"] = "readonly"
     
     context = {
         "mode": mode,
@@ -82,6 +86,7 @@ def registration_view(request):
 @csrf_exempt
 def registration(request):
     request_data = dict(request.POST)
+    print(request_data)
     participant_keys = ["laboratory", "grade", "affiliation", "reference", "surname", "givenname", "surname_en", "givenname_en", "email", "password", "party_attendance", "is_presenter", "food_restriction", "comment"]
     program_keys = ["program_id", "title", "session_category", "require_table", "co_presenters"]
 

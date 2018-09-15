@@ -247,5 +247,11 @@
     if(idx==1) presentationCardTag();
     togglePresentationInputs();
     setRequired();
+
+    $("#id_is_presenter").on("mousedown",function(e){
+        if($(this).attr("readonly")){
+            return false;
+        }
+    });
 </script>
 {% endblock %}
