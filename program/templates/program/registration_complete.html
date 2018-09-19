@@ -2,7 +2,10 @@
 {% block content %}
 {% if not err %}
 登録が完了しました。 Registration is completed.<br><br>
-<a href="../registration/?mode=edit">情報を編集する Edit information</a>
+<a href="../registration/?mode=edit">情報を編集する Edit information</a><br>
+    {% if is_admin %}
+    <a href="/registration_list/">管理画面へ戻る</a><br>
+    {% endif %}
 {% elif err == "duplicate" %}
 メールアドレスか所属・名前が既に登録されています。以下からログインしてください。<br>
 Your email address or affiliation and name had been already registered. Please log in from the link below.<br><br>

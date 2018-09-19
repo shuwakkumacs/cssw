@@ -15,7 +15,8 @@ class ParticipantForm(ModelForm):
         model = Participant
         exclude = ["time_created"]
         widgets = {
-            "password": TextInput(attrs={"type": "password"})
+            "password": TextInput(attrs={"type": "password"}),
+            "is_admin": HiddenInput()
         }
 
 class ProgramForm(ModelForm):

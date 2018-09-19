@@ -68,6 +68,7 @@ class Participant(models.Model):
     party_attendance = models.CharField(max_length=10, choices=PARTY_ATTENDANCE_CHOICES, verbose_name="懇親会の参加 Dinner party")
     food_restriction = models.CharField(max_length=10, choices=FOOD_RESTRICTION_CHOICES, verbose_name="食物制限の有無 Do you have any food restriction?")
     comment = models.TextField(blank=True)
+    is_admin = models.BooleanField(default=False)
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_modified = models.DateTimeField(blank=True, null=True)
 
@@ -104,7 +105,7 @@ class AccessToken(models.Model):
             params = {
                 "participant_id": participant.id,
                 "access_token": access_token,
-                "user_agent": user_agent
+                "user_agent": user_agent,
             }
             data_access_token = AccessToken(**params)
             data_access_token.save()
@@ -112,7 +113,7 @@ class AccessToken(models.Model):
         else:
             return False
 
-    def authorize(access_token):
+    def authorize(access_token,admin=False):
         data_token = AccessToken.objects.filter(access_token=access_token).first()
         return data_token
 
@@ -147,17 +148,17 @@ class Program(models.Model):
         return program
 
     @staticmethod
-    def get_with_participants(laboratory=""):
-        if laboratory != "":
-            #data_all = Program.objects.filter(participant__laboratory=laboratory,time_deleted=None).values("participant__id","participant__surname","participant__givenname","participant__surname_en","participant__givenname_en").all()
-            data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join program_program as pr on pa.id=pr.participant_id where pa.laboratory='{}' and pr.time_deleted is null;".format(laboratory))
-            #data_all = Program.objects.filter(participant__laboratory=laboratory).filter(time_deleted=None).
-            #data_all = Program.objects.filter(participant__isnull=True).all()
-            #data_all = Participant.objects.select_related("program").all()
-        else:
-            #data_all = Program.objects.filter(participant__program__isnull=True).filter(time_deleted=None)
-            data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join program_program as pr on pa.id=pr.participant_id where pr.time_deleted is null;".format(laboratory))
-            #data_all = Program.objects.filter(time_deleted=None).select_related("participant").all()
+    def get_with_participants(laboratory="",grade="",session_category=""):
+        laboratory_query = ""
+        grade_query = ""
+        session_category_query = ""
+        if laboratory:
+            laboratory_query = " and laboratory='{}'".format(laboratory)
+        if grade:
+            grade_query = " and grade='{}'".format(grade)
+        if session_category:
+            session_category_query = " and session_category='{}'".format(session_category)
+        data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join program_program as pr on pa.id=pr.participant_id where pr.time_deleted is null{}{}{} order by pa.id;".format(laboratory_query,grade_query,session_category_query))
         return data_all
 
 class ProgramHistory(models.Model):

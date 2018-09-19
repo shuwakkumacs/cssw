@@ -9,18 +9,26 @@
         margin-bottom: 0;
     }
 </style>
-<select id="labs" class="form-control" style="width:auto; min-width:30%;">
+<select id="laboratories" class="form-control" style="width:auto; min-width:30%;">
     <option value="">-- 研究室選択 --</option>
-    <option value="Ishikawa">石川研</option>
-    <option value="Ogawa">小川研</option>
-    <option value="Katto">甲藤研</option>
-    <option value="Kobayashi">小林研</option>
-    <option value="Sakai">酒井研</option>
-    <option value="Shimizu">清水研</option>
-    <option value="Nakajima">中島研</option>
-    <option value="Yamana">山名研</option>
+{% for lab in laboratory_choices %}
+    <option value="{{ lab.0 }}">{{ lab.1 }}</option>
+{% endfor %}
+</select>
+<select id="grades" class="form-control" style="width:auto; min-width:30%;">
+    <option value="">-- 学年選択 --</option>
+{% for grade in grade_choices %}
+    <option value="{{ grade.0 }}">{{ grade.1 }}</option>
+{% endfor %}
+</select>
+<select id="session-categories" class="form-control" style="width:auto; min-width:30%;">
+    <option value="">-- 発表区分選択 --</option>
+{% for session_category in session_category_choices %}
+    <option value="{{ session_category.0 }}">{{ session_category.1 }}</option>
+{% endfor %}
 </select>
 <br>
+検索結果　{{ programs_count }} 件
 <table class="table" style="background:white;width:150%;">
     <tr>
         <th scope="col">#</th>
@@ -41,7 +49,7 @@
     </tr>
 {% for program in programs %}
     <tr>
-        <th scope="row">{{ program.id }}</th>
+        <th scope="row"><a href="/registration?mode=admin&participant_id={{program.id}}">{{ program.id }}</a></th>
         <td>{{ program.laboratory }}</td>
         <td>{{ program.grade }}</td>
         <td>{{ program.surname }}</td>
@@ -105,9 +113,15 @@ var getUrlVars = function(){
     } 
     return vars; 
 }
-    $("#labs").val(getUrlVars()["laboratory"]);
-    $("#labs").on("change", function(){
-        window.location.href = "./?laboratory="+$(this).val();
+    console.log(getUrlVars())
+    $("#laboratories").val(getUrlVars()["laboratory"]);
+    $("#grades").val(getUrlVars()["grade"]);
+    $("#session-categories").val(getUrlVars()["session_category"]);
+    $("#laboratories, #grades, #session-categories").on("change", function(){
+        var laboratory = $("#laboratories").val();
+        var grade = $("#grades").val();
+        var session_category = $("#session-categories").val();
+        window.location.href = "./?laboratory="+laboratory+"&grade="+grade+"&session_category="+session_category;;
     });
 //    $.get({
 //        "url": "../operation/registration_list/?laboratory=Ogawa",

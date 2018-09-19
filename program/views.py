@@ -47,10 +47,21 @@ def main(request):
 def registration_view(request):
     mode = request.GET.get(key="mode", default=None)
     err = request.GET.get(key="err", default=None)
+    registration_disabled = settings["EXPIRATION"]["registration"] and (settings["EXPIRATION"]["registration_date"]-datetime.now()).total_seconds()<0
 
     access_token = request.COOKIES.get('access_token')
     data_access_token = AccessToken.authorize(access_token)
-    if mode=="edit":
+    if mode=="admin" and data_access_token.participant.is_admin:
+        participant_id = request.GET.get(key="participant_id", default=None)
+        participant = Participant.get_by_id(id=participant_id)
+        programs = Program.get_by_participant_id(participant_id=participant.id)
+        participant_form = ParticipantForm(instance=participant)
+        participant_form.fields["password"].widget = HiddenInput()
+        program_forms = []
+        for program in programs:
+            program_forms.append(ProgramForm(instance=program))
+        
+    elif mode=="edit":
         if not data_access_token:
             response = redirect("../login/?mode=reg")
             response.delete_cookie("access_token")
@@ -63,6 +74,8 @@ def registration_view(request):
         program_forms = []
         for program in programs:
             program_forms.append(ProgramForm(instance=program))
+        if registration_disabled:
+            participant_form.fields["is_presenter"].widget.attrs["readonly"] = "readonly"
     else:
         if data_access_token:
             response = redirect("../registration/?mode=edit")
@@ -70,12 +83,9 @@ def registration_view(request):
 
         participant_form = ParticipantForm()
         program_forms = []
-
-    if settings["EXPIRATION"]["registration"] and (settings["EXPIRATION"]["registration_date"]-datetime.now()).total_seconds()<0:
-        participant_form.fields["is_presenter"].widget.attrs["readonly"] = "readonly"
-        if mode!="edit":
+        if registration_disabled:
             participant_form.initial["is_presenter"] = "No"
-            
+            participant_form.fields["is_presenter"].widget.attrs["readonly"] = "readonly"
     
     context = {
         "mode": mode,
@@ -89,8 +99,7 @@ def registration_view(request):
 @csrf_exempt
 def registration(request):
     request_data = dict(request.POST)
-    print(request_data)
-    participant_keys = ["laboratory", "grade", "affiliation", "reference", "surname", "givenname", "surname_en", "givenname_en", "email", "password", "party_attendance", "is_presenter", "food_restriction", "comment"]
+    participant_keys = ["laboratory", "grade", "affiliation", "reference", "surname", "givenname", "surname_en", "givenname_en", "email", "password", "party_attendance", "is_presenter", "food_restriction", "comment", "is_admin"]
     program_keys = ["program_id", "title", "session_category", "require_table", "co_presenters"]
 
     redirect_url = "../../registration_complete/"
@@ -171,9 +180,12 @@ def registration(request):
 @csrf_exempt
 def registration_complete_view(request):
     err = request.GET.get(key="err", default=None)
+    access_token = request.COOKIES.get('access_token')
+    data_access_token = AccessToken.authorize(access_token)
     context = {
         "err": err,
-        "settings": settings
+        "settings": settings,
+        "is_admin": data_access_token.participant.is_admin
     }
     return render(request, "program/registration_complete.html", context=context)
 
@@ -207,6 +219,8 @@ def login_view(request):
             response = redirect("../registration/?mode=edit")
         elif mode=="onsite":
             response = redirect("../../")
+        elif mode=="admin" and data_access_token.participant.is_admin:
+            response = redirect("../registration_list/")
         response.delete_cookie("access_token")
         return response
 
@@ -231,27 +245,34 @@ def login(request):
     participant = Participant.get(email=request_data["email"], password=request_data["password"])
 
     if participant:
-        access_token = AccessToken.register(**request_data)
-
-        edit_active = (settings["EXPIRATION"]["edit"] and settings["EXPIRATION"]["edit_date"]>datetime.now())
-        onsite_active = (settings["EXPIRATION"]["onsite"] and settings["EXPIRATION"]["onsite_date"]>datetime.now())
-
         if (not mode) and (not edit_active==onsite_active):
-            return redirect("../../login/?err=invalid")
+            return redirect("/login/?err=invalid")
 
-        if mode=="reg":
-            response = redirect("../../registration/?mode=edit")
-        elif mode=="onsite":
-            return redirect("../../")
-
-        else: 
-            if edit_active:
-                return redirect("../../registration/?mode=edit")
+        if mode=="admin":
+            if participant.is_admin:
+                access_token = AccessToken.register(**request_data)
+                response = redirect("/registration_list")
+                response.set_cookie("access_token", access_token, max_age=60*60*24)
+                return response
             else:
-                return redirect("../../")
+                return redirect("/login/?mode=admin&err=invalid")
+        else:
 
-        response.set_cookie("access_token", access_token, max_age=60*60*24)
-        return response
+            access_token = AccessToken.register(**request_data)
+            if mode=="reg":
+                response = redirect("/registration/?mode=edit")
+            elif mode=="onsite":
+                response = redirect("/")
+            else: 
+                edit_active = (settings["EXPIRATION"]["edit"] and settings["EXPIRATION"]["edit_date"]>datetime.now())
+                onsite_active = (settings["EXPIRATION"]["onsite"] and settings["EXPIRATION"]["onsite_date"]>datetime.now())
+
+                if edit_active:
+                    response = redirect("/registration/?mode=edit")
+                else:
+                    response = redirect("/")
+            response.set_cookie("access_token", access_token, max_age=60*60*24)
+            return response
 
     else:
         return redirect("../../login/?mode={}&err=unauthorized".format(mode))
@@ -309,15 +330,26 @@ def password_change(request):
 @never_cache
 @csrf_exempt
 def registration_list_view(request):
-    #if not _basicAuth(request):
-    #    return _http401()
-    laboratory = request.GET.get(key="laboratory", default=None)
-    programs = Program.get_with_participants(laboratory=laboratory)
-    context = {
-        "settings": settings,
-        "programs": programs
-    }
-    return render(request, "program/registration_list.html", context=context)
+    access_token = request.COOKIES.get('access_token')
+    data_access_token = AccessToken.authorize(access_token,admin=True)
+    if data_access_token and data_access_token.participant.is_admin:
+        queries = {
+            "laboratory": request.GET.get(key="laboratory", default=None),
+            "grade": request.GET.get(key="grade", default=None),
+            "session_category": request.GET.get(key="session_category", default=None)
+        }
+        programs = Program.get_with_participants(**queries)
+        context = {
+            "settings": settings,
+            "laboratory_choices": LABORATORY_CHOICES,
+            "grade_choices": GRADE_CHOICES,
+            "session_category_choices": SESSION_CATEGORY_CHOICES,
+            "programs": programs,
+            "programs_count": len(programs)
+        }
+        return render(request, "program/registration_list.html", context=context)
+    else:
+        return redirect("/login/?mode=admin")
 
 @csrf_exempt
 def get_registration_list(request):
