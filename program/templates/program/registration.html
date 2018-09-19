@@ -27,7 +27,7 @@
     <div class="card">
         <div class="card-body">
             <ul style="-webkit-padding-start:20px;margin-bottom:0;">
-                {% if mode != "edit" %}
+                {% if mode != "edit" and mode != "admin" %}
                 <li>登録内容の修正には<a href="../login/?mode=reg">ログイン</a>してください。 Please <a href="../login/?mode=reg">log in</a> to edit your information.</li>
             </ul>
         </div>
@@ -79,14 +79,15 @@
                     {{ participant_form.email.label_tag }} {{ participant_form.email }}
                 </div>
                 <div class="form-group">
-                    {% if mode != "edit" %}
+                    {% if mode != "edit" and mode != "admin" %}
                     {{ participant_form.password.label_tag }}
                     {% endif %}
                     {{ participant_form.password }}
-                    {% if mode != "edit" %}
+                    {% if mode != "edit" and mode != "admin" %}
                     <small class="form-text text-muted">*登録情報の変更および当日の参加にログインが必要となります。 Log-in will be required for editing registration and on-site participation.</small>
                     {% endif %}
                 </div>
+                {{ participant_form.is_admin }}
                 <div class="form-group">
                     {{ participant_form.is_presenter.label_tag }} {{ participant_form.is_presenter }}
                     <small class="form-text text-muted">*中間集計の都合上、（代表発表者として）発表予定の方は初回登録時に極力"あり"を選択してください。 If you are planning to present (as the first presenter), please choose "Yes" for your first-time registration.</small>
