@@ -101,8 +101,19 @@ def registration(request):
     request_data = dict(request.POST)
     participant_keys = ["laboratory", "grade", "affiliation", "reference", "surname", "givenname", "surname_en", "givenname_en", "email", "password", "party_attendance", "is_presenter", "food_restriction", "comment", "is_admin"]
     program_keys = ["program_id", "title", "session_category", "require_table", "co_presenters"]
+    pid = request_data["participant"][0]
 
     redirect_url = "../../registration_complete/"
+
+    if "submit_delete" in request_data:
+        Participant.delete_by_id(id=pid)
+        redirect_url += "?mode=delete"
+        response = redirect(redirect_url)
+        access_token = request.COOKIES.get('access_token')
+        data_access_token = AccessToken.authorize(access_token)
+        if data_access_token.participant.id==int(pid):
+            response.delete_cookie("access_token")
+        return response
 
     postdata = { "participant": {}, "program": [] }
     for key in participant_keys:
@@ -118,7 +129,6 @@ def registration(request):
             if key in request_data:
                 postdata["program"][i][key] = request_data[key][i]
     
-    pid = request_data["participant"][0]
     if pid != "":  # edit mode
         try:
             with transaction.atomic():
@@ -180,13 +190,17 @@ def registration(request):
 @csrf_exempt
 def registration_complete_view(request):
     err = request.GET.get(key="err", default=None)
-    access_token = request.COOKIES.get('access_token')
-    data_access_token = AccessToken.authorize(access_token)
+    mode = request.GET.get(key="mode", default=None)
     context = {
         "err": err,
         "settings": settings,
-        "is_admin": data_access_token.participant.is_admin
+        "deleted": mode
     }
+    access_token = request.COOKIES.get('access_token')
+    if access_token:
+        data_access_token = AccessToken.authorize(access_token)
+        context["is_admin"] = data_access_token.participant.is_admin
+
     return render(request, "program/registration_complete.html", context=context)
 
 @csrf_exempt

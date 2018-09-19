@@ -122,9 +122,13 @@
         </div>
     </div>
     <input name="participant" type="hidden" value="{{ participant_form.initial.id }}" />
-    <input id="btn-register" class="btn btn-{{ mode|yesno:"secondary,primary" }}" type="submit" value="{{ mode|yesno:"Update,Register" }}"/>
+    <input id="btn-register" class="btn btn-{{ mode|yesno:"secondary,primary" }}" type="submit" value="{{ mode|yesno:"Update,Register" }}" name="submit_register" />
+    {% if mode %}
+    <input id="btn-delete" class="btn btn-danger" type="submit" value="Delete registration" name="submit_delete" />
+    {% endif %}
 </form>
 <script>
+    $("#btn-delete").on("click", function(){ return window.confirm("本当によろしいですか？発表情報も含めた全てのデータが削除されます。この動作は取り消せません。 Are you sure to remove? All data including presentation information will be deleted. This cannot be undone."); });
     $.fn.appendAttr = function(attrName, suffix) {
         this.attr(attrName, function(i, val) {
             return val + suffix;

@@ -71,18 +71,19 @@ class Participant(models.Model):
     is_admin = models.BooleanField(default=False)
     time_created = models.DateTimeField(auto_now_add=True, blank=True)
     time_modified = models.DateTimeField(blank=True, null=True)
+    time_deleted = models.DateTimeField(blank=True, null=True)
 
     @staticmethod
     def get(email, password):
-        return Participant.objects.filter(email=email, password=md5(password)).first()
+        return Participant.objects.filter(email=email, password=md5(password), time_deleted=None).first()
 
     @staticmethod
     def get_by_id(id):
-        return Participant.objects.filter(id=id).first()
+        return Participant.objects.filter(id=id, time_deleted=None).first()
 
     @staticmethod
     def get_by_email(email):
-        return Participant.objects.filter(email=email).first()
+        return Participant.objects.filter(email=email, time_deleted=None).first()
 
     @staticmethod
     def add(request_data):
@@ -91,6 +92,12 @@ class Participant(models.Model):
         data_participant = Participant(**request_data)
         data_participant.save()
         return data_participant
+
+    @staticmethod
+    def delete_by_id(id=id):
+        participant = Participant.get_by_id(id)
+        participant.time_deleted = timezone.now()
+        participant.save()
 
 class AccessToken(models.Model):
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE, null=True)
@@ -158,7 +165,7 @@ class Program(models.Model):
             grade_query = " and grade='{}'".format(grade)
         if session_category:
             session_category_query = " and session_category='{}'".format(session_category)
-        data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join program_program as pr on pa.id=pr.participant_id where pr.time_deleted is null{}{}{} order by pa.id;".format(laboratory_query,grade_query,session_category_query))
+        data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join program_program as pr on pa.id=pr.participant_id where pr.time_deleted is null and pa.time_deleted is null{}{}{} order by pa.id;".format(laboratory_query,grade_query,session_category_query))
         return data_all
 
 class ProgramHistory(models.Model):
