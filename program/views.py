@@ -8,6 +8,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.core import serializers
 from django.views.decorators.cache import never_cache
+from django.contrib.admin.sites import site, AdminSite
 from django.core.mail import EmailMessage
 from .models import *
 from .forms import *
@@ -71,8 +72,10 @@ def registration_view(request):
         program_forms = []
 
     if settings["EXPIRATION"]["registration"] and (settings["EXPIRATION"]["registration_date"]-datetime.now()).total_seconds()<0:
-        #participant_form.initial["is_presenter"] = "No"
         participant_form.fields["is_presenter"].widget.attrs["readonly"] = "readonly"
+        if mode!="edit":
+            participant_form.initial["is_presenter"] = "No"
+            
     
     context = {
         "mode": mode,
@@ -327,24 +330,6 @@ def delete_program(request):
     Program.delete_by_id(program_id)
     return HttpResponse("")
 
-def _basicAuth(request):
-    if 'HTTP_AUTHORIZATION' not in request.META:
-        return False
-    (authscheme, base64_idpass) = request.META['HTTP_AUTHORIZATION'].split(' ', 1)
-    if authscheme.lower() != 'basic':
-        return _http401()
-    idpass = base64.decodestring(base64_idpass.strip().encode('ascii')).decode('ascii')
-    (id_, password) = idpass.split(':', 1)
-    if id_ == "foo" and password == "bar":
-        return True
-    else:
-        return False
-
-def _http401():
-    response = HttpResponse("Unauthorized", status=401)
-    response['WWW-Authenticate'] = 'Basic realm="basic auth test"'
-
-    return response
 
 # Only for development
 @csrf_exempt
