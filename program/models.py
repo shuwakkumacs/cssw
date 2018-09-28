@@ -148,11 +148,17 @@ class Program(models.Model):
         return Program.objects.filter(participant_id=participant_id, time_deleted=None).all()
 
     def delete_by_id(id):
-        print(id)
         program = Program.objects.filter(id=id).first()
         program.time_deleted = timezone.now()
         program.save()
         return program
+
+    def delete_by_participant_id(participant_id):
+        programs = Program.objects.filter(participant_id=participant_id).all()
+        for program in programs:
+            program.time_deleted = timezone.now()
+            program.save()
+        return programs
 
     @staticmethod
     def get_with_participants(laboratory="",grade="",session_category=""):
@@ -160,12 +166,12 @@ class Program(models.Model):
         grade_query = ""
         session_category_query = ""
         if laboratory:
-            laboratory_query = " and laboratory='{}'".format(laboratory)
+            laboratory_query = " and pa.laboratory='{}'".format(laboratory)
         if grade:
-            grade_query = " and grade='{}'".format(grade)
+            grade_query = " and pa.grade='{}'".format(grade)
         if session_category:
-            session_category_query = " and session_category='{}'".format(session_category)
-        data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join program_program as pr on pa.id=pr.participant_id where pr.time_deleted is null and pa.time_deleted is null{}{}{} order by pa.id;".format(laboratory_query,grade_query,session_category_query))
+            session_category_query = " and pr.session_category='{}'".format(session_category)
+        data_all = Program.objects.raw("select pa.*,pr.* from program_participant as pa left join (select * from program_program where time_deleted is null) as pr on pa.id=pr.participant_id where pa.time_deleted is null{}{}{} order by pa.id;".format(laboratory_query,grade_query,session_category_query))
         return data_all
 
 class ProgramHistory(models.Model):

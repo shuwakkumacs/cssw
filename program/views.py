@@ -48,6 +48,7 @@ def registration_view(request):
     mode = request.GET.get(key="mode", default=None)
     err = request.GET.get(key="err", default=None)
     registration_disabled = settings["EXPIRATION"]["registration"] and (settings["EXPIRATION"]["registration_date"]-datetime.now()).total_seconds()<0
+    edit_disabled = settings["EXPIRATION"]["edit"] and (settings["EXPIRATION"]["edit_date"]-datetime.now()).total_seconds()<0
 
     access_token = request.COOKIES.get('access_token')
     data_access_token = AccessToken.authorize(access_token)
@@ -76,6 +77,15 @@ def registration_view(request):
             program_forms.append(ProgramForm(instance=program))
         if registration_disabled:
             participant_form.fields["is_presenter"].widget.attrs["readonly"] = "readonly"
+        if edit_disabled:
+            participant_form.fields["party_attendance"].widget.attrs["readonly"] = "readonly"
+            participant_form.fields["food_restriction"].widget.attrs["readonly"] = "readonly"
+            for program_form in program_forms:
+                program_form.fields["title"].widget.attrs["readonly"] = "readonly"
+                program_form.fields["session_category"].widget.attrs["readonly"] = "readonly"
+                program_form.fields["require_table"].widget.attrs["readonly"] = "readonly"
+                program_form.fields["co_presenters"].widget.attrs["readonly"] = "readonly"
+            
     else:
         if data_access_token:
             response = redirect("../registration/?mode=edit")
@@ -86,6 +96,11 @@ def registration_view(request):
         if registration_disabled:
             participant_form.initial["is_presenter"] = "No"
             participant_form.fields["is_presenter"].widget.attrs["readonly"] = "readonly"
+        if edit_disabled:
+            participant_form.initial["party_attendance"] = "No"
+            participant_form.fields["party_attendance"].widget.attrs["readonly"] = "readonly"
+            participant_form.initial["food_restriction"] = "No"
+            participant_form.fields["food_restriction"].widget.attrs["readonly"] = "readonly"
     
     context = {
         "mode": mode,
@@ -107,6 +122,7 @@ def registration(request):
 
     if "submit_delete" in request_data:
         Participant.delete_by_id(id=pid)
+        Program.delete_by_participant_id(participant_id=pid)
         redirect_url += "?mode=delete"
         response = redirect(redirect_url)
         access_token = request.COOKIES.get('access_token')
@@ -153,6 +169,8 @@ def registration(request):
                                 f_pr.save()
                             else:
                                 raise ValueError()
+                    else:
+                        Program.delete_by_participant_id(participant_id=pid)
                 else:
                     raise ValueError()
         except ValueError as e:

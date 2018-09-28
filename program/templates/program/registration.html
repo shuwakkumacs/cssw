@@ -252,7 +252,8 @@
     if(idx==1) presentationCardTag();
     setRequired();
 
-    $("#id_is_presenter").on("mousedown",function(e){
+    //$("#id_is_presenter, input[name=title], select[name=session_category], select[name=require_table], input[name=co_presenters]").on("mousedown",function(e){
+    $("input, select").on("mousedown",function(e){
         if($(this).attr("readonly")){
             return false;
         }
