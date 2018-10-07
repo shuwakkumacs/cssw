@@ -127,7 +127,7 @@ class AccessToken(models.Model):
 class Program(models.Model):
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE, null=True)
     title = models.CharField(max_length=300, default="", verbose_name="表題 Title")
-    session_number = models.IntegerField(null=True, blank=True, verbose_name="セッション番号 Session number")
+    session_number = models.CharField(max_length=10, null=True, blank=True, verbose_name="セッション番号 Session number")
     program_number = models.IntegerField(null=True, blank=True, verbose_name="プログラム番号 Program number")
     session_category = models.CharField(max_length=100, choices=SESSION_CATEGORY_CHOICES, verbose_name="セッション種別 Session category")
     require_table = models.CharField(max_length=10, choices=REQUIRE_TABLE_CHOICES, verbose_name="デモ用テーブルの用意 Demo table")
