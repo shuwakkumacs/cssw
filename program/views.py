@@ -44,6 +44,84 @@ def main(request):
     return HttpResponse("")
 
 @csrf_exempt
+def qrscan(request,session_number,program_number):
+    access_token = request.COOKIES.get('access_token')
+    data_token = AccessToken.authorize(access_token)
+    if data_token:
+        participant = data_token.participant
+        program = Program.get_by_program_number(session_number,program_number)
+        if program and not ProgramHistory.get_by_program_id(participant,program.id):
+            ProgramHistory.add(participant,program)
+        return redirect("/program_history/?npid={}".format(program.id))
+    else:
+        response = redirect("/login/?mode=onsite")
+        response.delete_cookie("access_token")
+        return response
+
+@csrf_exempt
+def vote(request,program_id,point):
+    access_token = request.COOKIES.get('access_token')
+    data_token = AccessToken.authorize(access_token)
+    if data_token:
+        participant = data_token.participant
+        if int(point)>=1 and int(point)<=3:
+            VoteHistory.add(participant,program_id,point)
+    return HttpResponse("")
+        
+
+@csrf_exempt
+def program_history_view(request):
+    def format_program(program_id,point=None):
+        program = Program.get_by_id(program_id)
+        presenter = program.participant.givenname_en+" "+program.participant.surname_en + " (" + program.participant.laboratory + " Lab., "+program.participant.grade+")"
+        if program.co_presenters:
+            co_presenters = program.co_presenters.split(",")
+        else:
+            co_presenters = None
+        return {
+            "id": program.id,
+            "session_number": program.session_number,
+            "program_number": program.program_number,
+            "session_category": program.session_category,
+            "title": program.title,
+            "presenter": presenter,
+            "co_presenters": co_presenters,
+            "point": point
+        }
+
+    new_program_id = request.GET.get(key="npid", default=None)
+    if new_program_id:
+        new_program_id = int(new_program_id)
+
+    context = {
+        "settings": settings,
+        "new_program": None,
+        "loop_range": [1,2,3]
+    }
+
+    access_token = request.COOKIES.get('access_token')
+    if access_token:
+        data_access_token = AccessToken.authorize(access_token)
+        context["is_admin"] = data_access_token.participant.is_admin
+    else:
+        response = redirect("/login/mode=onsite")
+        response.delete_cookie("access_token")
+        return response
+        
+    participant = data_access_token.participant
+
+    if new_program_id and ProgramHistory.get_by_program_id(participant,new_program_id):
+        latest_vote = VoteHistory.get_latest_by_program_id(participant,new_program_id)
+        if latest_vote:
+            point = latest_vote.point
+        else:
+            point = None
+        context["new_program"] = format_program(new_program_id,point)
+    context["programs"] = [format_program(p.program_id,p.point) for p in ProgramHistory.get_all_for_participant_with_points(participant.id) if p.program.id!=new_program_id]
+    return render(request, "program/program_history.html", context=context)
+    
+
+@csrf_exempt
 def registration_view(request):
     mode = request.GET.get(key="mode", default=None)
     err = request.GET.get(key="err", default=None)
@@ -64,7 +142,7 @@ def registration_view(request):
         
     elif mode=="edit":
         if not data_access_token:
-            response = redirect("../login/?mode=reg")
+            response = redirect("/login/?mode=reg")
             response.delete_cookie("access_token")
             return response
 
@@ -248,11 +326,11 @@ def login_view(request):
     data_access_token = AccessToken.authorize(access_token)
     if data_access_token:
         if mode=="reg":
-            response = redirect("../registration/?mode=edit")
+            response = redirect("/registration/?mode=edit")
         elif mode=="onsite":
-            response = redirect("../../")
+            response = redirect("/program_history/")
         elif mode=="admin" and data_access_token.participant.is_admin:
-            response = redirect("../registration_list/")
+            response = redirect("/registration_list/")
         response.delete_cookie("access_token")
         return response
 
@@ -294,7 +372,7 @@ def login(request):
             if mode=="reg":
                 response = redirect("/registration/?mode=edit")
             elif mode=="onsite":
-                response = redirect("/")
+                response = redirect("/program_history/")
             else: 
                 edit_active = (settings["EXPIRATION"]["edit"] and settings["EXPIRATION"]["edit_date"]>datetime.now())
                 onsite_active = (settings["EXPIRATION"]["onsite"] and settings["EXPIRATION"]["onsite_date"]>datetime.now())

@@ -1,0 +1,130 @@
+{% extends "program/base.html" %}
+{% block content %}
+<style>
+    body { padding: 30px 3%; }
+    .card { margin: 30px auto; }
+    .card-body { padding: 0.5rem; }
+    .new-program {
+        margin-top: 0; 
+        background: #ffb;
+    }
+    .program .title {
+        font-weight: bold;
+    }
+    .card-header {
+        padding: 0;
+    }
+    .card-header div {
+        float: left;
+        text-align: center;
+        color: white;
+        font-weight: bold;
+    }
+    .program_number { width: 30%; background: #666; }
+    .session_category { width: 70%; }
+    .session_category[name=Technical] { background: #c00; }
+    .session_category[name=WiP] { background: #0a0; }
+    .session_category[name=Short] { background: #aa0; }
+    .clear { clear: both; }
+    .voter {
+        width: 95%;
+        margin: 10px auto 0px auto;
+        font-size: 1.1em;
+    }
+    .voter_each {
+        float: left;
+        width: 33.3%;
+        text-align: center;
+    }
+    .voter_each label {
+        width: 80%;
+        margin: 10px auto;
+        height: 40px;
+        line-height: 25px;
+    }
+    .voter .recommend {
+        float: right;
+        font-size: 0.6em;
+    }
+    .voter .not_recommend {
+        float: left;
+        font-size: 0.6em;
+    }
+    .btn:not(:disabled):not(.disabled) {
+        color: #000;
+        cursor: pointer;
+        background: #fff;
+    }
+    .voter input[type=radio] {
+        display: none;
+    }
+</style>
+<b>Just added:</b>
+{% if new_program %}
+<div class="card new-program">
+    <div class="card-header">
+        <div class="program_number">{{ new_program.session_number }}-{{ new_program.program_number }}</div>
+        <div class="session_category" name="{{ new_program.session_category }}">{{ new_program.session_category }}</div>
+        <div class="clear"></div>
+    </div>
+    <div class="card-body program">
+        <div class="title">{{ new_program.title }}</div>
+        <div class="authors">
+            <u>{{ new_program.presenter }}</u>
+            {% for co_presenter in new_program.co_presenters %}
+            , {{ co_presenter }}
+            {% endfor %}
+        </div>
+        <div class="voter" name="vote-{{ new_program.id }}">
+            <div class="btn-group btn-group-toggle" data-toggle="buttons" style="width:100%">
+                {% for i in loop_range %}
+                <div class="voter_each"><label class="btn btn-outline-secondary {% if i == new_program.point %}active{% endif %}" onclick="vote({{ new_program.id }},{{i}});"><input type="radio" name="hoge" autocomplete="off" value="{{i}}"><i class="far fa-thumbs-up"></i> +{{i}}</label></div>
+                {% endfor %}
+                <div class="clear"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% for program in programs %}
+<div class="card program">
+    <div class="card-header">
+        <div class="program_number">{{ program.session_number }}-{{ program.program_number }}</div>
+        <div class="session_category" name="{{ program.session_category }}">
+            {{ program.session_category }}
+        </div>
+        <div class="clear"></div>
+    </div>
+    <div class="card-body program">
+        <div class="title">{{ program.title }}</div>
+        <div class="authors">
+            <u>{{ program.presenter }}</u>
+            {% for co_presenter in program.co_presenters %}
+            , {{ co_presenter }}
+            {% endfor %}
+        </div>
+        <div class="voter" name="vote-{{ program.id }}">
+            <div class="btn-group btn-group-toggle" data-toggle="buttons" style="width:100%">
+                {% for i in loop_range %}
+                <div class="voter_each">
+                    <label class="btn btn-outline-secondary {% if i == program.point %}active{% endif %}" onclick="vote({{ program.id }},{{i}});">
+                        <input type="radio" name="hoge" autocomplete="off" value="{{i}}">
+                        <i class="far fa-thumbs-up"></i> +{{i}}
+                    </label>
+                </div>
+                {% endfor %}
+                <div class="clear"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+var vote = function(program_id,point){
+    $.get({
+        "url": "/operation/vote/"+program_id+"/"+point
+    });
+};
+</script>
+{% endblock %}
