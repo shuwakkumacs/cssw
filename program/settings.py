@@ -2,6 +2,7 @@ from datetime import datetime
 
 settings = {
     "YEAR": 2018,
+    "WORKSHOP_DATE": datetime(2018, 10, 13),
     "COMMITTEE_CHAIR": {
         "email": "susumu@pcl.cs.waseda.ac.jp",
         "name": "斎藤奨",

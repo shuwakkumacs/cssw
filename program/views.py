@@ -16,7 +16,6 @@ import json
 import hashlib
 import copy
 from .settings import settings
-from datetime import datetime
 import sys
 import requests
 import base64
@@ -43,18 +42,21 @@ def main(request):
     #return render(request, "program/main.html", context = {"form": form})
     return HttpResponse("")
 
+def add_program_history(participant,program):
+    if program and not ProgramHistory.get_by_program_id(participant,program.id):
+        ProgramHistory.add(participant,program)
+
 @csrf_exempt
 def qrscan(request,session_number,program_number):
     access_token = request.COOKIES.get('access_token')
     data_token = AccessToken.authorize(access_token)
+    program = Program.get_by_program_number(session_number,program_number)
     if data_token:
         participant = data_token.participant
-        program = Program.get_by_program_number(session_number,program_number)
-        if program and not ProgramHistory.get_by_program_id(participant,program.id):
-            ProgramHistory.add(participant,program)
+        add_program_history(participant,program)
         return redirect("/program_history/?npid={}".format(program.id))
     else:
-        response = redirect("/login/?mode=onsite")
+        response = redirect("/login/?mode=onsite&npid={}".format(program.id))
         response.delete_cookie("access_token")
         return response
 
@@ -104,7 +106,7 @@ def program_history_view(request):
         data_access_token = AccessToken.authorize(access_token)
         context["is_admin"] = data_access_token.participant.is_admin
     else:
-        response = redirect("/login/mode=onsite")
+        response = redirect("/login/?mode=onsite")
         response.delete_cookie("access_token")
         return response
         
@@ -125,8 +127,8 @@ def program_history_view(request):
 def registration_view(request):
     mode = request.GET.get(key="mode", default=None)
     err = request.GET.get(key="err", default=None)
-    registration_disabled = settings["EXPIRATION"]["registration"] and (settings["EXPIRATION"]["registration_date"]-datetime.now()).total_seconds()<0
-    edit_disabled = settings["EXPIRATION"]["edit"] and (settings["EXPIRATION"]["edit_date"]-datetime.now()).total_seconds()<0
+    registration_disabled = settings["EXPIRATION"]["registration"] and (settings["EXPIRATION"]["registration_date"]-timezone.now()).total_seconds()<0
+    edit_disabled = settings["EXPIRATION"]["edit"] and (settings["EXPIRATION"]["edit_date"]-timezone.now()).total_seconds()<0
 
     access_token = request.COOKIES.get('access_token')
     data_access_token = AccessToken.authorize(access_token)
@@ -321,6 +323,7 @@ def signup(request):
 def login_view(request):
     mode = request.GET.get(key="mode", default=None)
     err = request.GET.get(key="err", default=None)
+    npid = request.GET.get(key="npid", default=None)
 
     access_token = request.COOKIES.get('access_token')
     data_access_token = AccessToken.authorize(access_token)
@@ -338,6 +341,8 @@ def login_view(request):
         "mode": mode,
         "settings": settings
     }
+    if npid:
+        context["npid"] = npid
     if err=="invalid":
         context["errmsg"] = "許可されていないリクエストです。 Forbidden request."
     elif err=="unauthorized":
@@ -349,6 +354,7 @@ def login_view(request):
 @csrf_exempt
 def login(request):
     mode = request.GET.get(key="mode", default=None)
+    npid = request.GET.get(key="npid", default=None)
     request_data = dict(request.POST)
     for name,value in request_data.items():
         request_data[name] = value[0]
@@ -367,23 +373,29 @@ def login(request):
             else:
                 return redirect("/login/?mode=admin&err=invalid")
         else:
-
             access_token = AccessToken.register(**request_data)
-            if mode=="reg":
-                response = redirect("/registration/?mode=edit")
-            elif mode=="onsite":
-                response = redirect("/program_history/")
-            else: 
-                edit_active = (settings["EXPIRATION"]["edit"] and settings["EXPIRATION"]["edit_date"]>datetime.now())
-                onsite_active = (settings["EXPIRATION"]["onsite"] and settings["EXPIRATION"]["onsite_date"]>datetime.now())
-
-                if edit_active:
-                    response = redirect("/registration/?mode=edit")
-                else:
-                    response = redirect("/")
+            login_dest = get_login_destination()
+            if npid:
+                login_dest = "/program_history/?npid={}".format(npid)
+                program = Program.get_by_id(id=npid)
+                add_program_history(participant,program)
+            response = redirect(login_dest)
             response.set_cookie("access_token", access_token, max_age=60*60*24)
             return response
+            #if mode=="reg":
+            #    response = redirect("/registration/?mode=edit")
+            #elif mode=="onsite":
+            #    response = redirect("/program_history/")
+            #else: 
+            #    edit_active = (settings["EXPIRATION"]["edit"] and settings["EXPIRATION"]["edit_date"]>timezone.now())
+            #    onsite_active = (settings["EXPIRATION"]["onsite"] and settings["EXPIRATION"]["onsite_date"]>timezone.now())
 
+            #    if edit_active:
+            #        response = redirect("/registration/?mode=edit")
+            #    else:
+            #        response = redirect("/")
+            #response.set_cookie("access_token", access_token, max_age=60*60*24)
+            #return response
     else:
         return redirect("../../login/?mode={}&err=unauthorized".format(mode))
 
@@ -476,7 +488,7 @@ def delete_program(request):
 # Only for development
 @csrf_exempt
 def logout(request, redirect_fail=None):
-    response = redirect('../../signup/')
+    response = redirect('/login/?{}'.format(get_redirect_mode_query("login")))
     response.delete_cookie("access_token")
     return response
 
@@ -488,4 +500,21 @@ def check_session(access_token, redirect_to):
     else:
         return None
 
-
+def get_login_destination():
+    now = timezone.now()
+    if settings["WORKSHOP_DATE"]==now.date():
+        dest = "/program_history/"
+    #elif settings["EXPIRATION"]["edit_date"]>now:
+    else:
+        dest = "/registration/?mode=edit"
+    return dest
+    
+def get_redirect_mode_query(page):
+    now = timezone.now()
+    if page=="login":
+        #if settings["WORKSHOP_DATE"]==now.date():
+        #    mode = "onsite"
+        #elif settings["EXPIRATION"]["edit_date"]>now:
+        #    mode = "edit"
+        mode="onsite"
+    return "mode={}".format(mode)
