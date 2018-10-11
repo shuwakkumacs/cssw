@@ -84,7 +84,7 @@ def vote(request,program_id,point):
 
 @csrf_exempt
 def program_history_view(request):
-    def format_program(program_id,point=None):
+    def format_program(program_id,point=None,time_created=None):
         program = Program.get_by_id(program_id)
         presenter = program.participant.givenname_en+" "+program.participant.surname_en + " (" + program.participant.laboratory + " Lab., "+program.participant.grade+")"
         if program.co_presenters:
@@ -99,7 +99,8 @@ def program_history_view(request):
             "title": program.title,
             "presenter": presenter,
             "co_presenters": co_presenters,
-            "point": point
+            "point": point,
+            "time_created": time_created.strftime("%H:%M")
         }
 
     sort_order = request.GET.get(key="sort_order", default=None)
@@ -133,9 +134,9 @@ def program_history_view(request):
             point = None
         context["new_program"] = format_program(new_program_id,point)
     if sort_order:
-        context["programs"] = [format_program(p.program_id,p.point) for p in ProgramHistory.get_all_for_participant_with_points(participant.id, sort_order) if p.program.id!=new_program_id]
+        context["programs"] = [format_program(p.program_id,p.point,p.time_created) for p in ProgramHistory.get_all_for_participant_with_points(participant.id, sort_order) if p.program.id!=new_program_id]
     else:
-        context["programs"] = [format_program(p.program_id,p.point) for p in ProgramHistory.get_all_for_participant_with_points(participant.id) if p.program.id!=new_program_id]
+        context["programs"] = [format_program(p.program_id,p.point,p.time_created) for p in ProgramHistory.get_all_for_participant_with_points(participant.id) if p.program.id!=new_program_id]
     return render(request, "program/program_history.html", context=context)
     
 

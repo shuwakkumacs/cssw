@@ -197,7 +197,7 @@ class ProgramHistory(models.Model):
     
     @staticmethod
     def get_all_for_participant_with_points(participant_id,order="desc"):
-        return ProgramHistory.objects.raw("select p.id,p.program_id,v.point from program_programhistory as p left join (select tmp1.* from program_votehistory as tmp1 inner join (select program_id,max(time_created) as max_time_created from program_votehistory group by participant_id,program_id) as tmp2 on (tmp1.program_id=tmp2.program_id and tmp1.time_created=tmp2.max_time_created)) as v on (p.participant_id=v.participant_id and p.program_id=v.program_id) where p.participant_id={} order by p.program_id {};".format(participant_id,order))
+        return ProgramHistory.objects.raw("select p.id,p.program_id,p.time_created,v.point from program_programhistory as p left join (select tmp1.* from program_votehistory as tmp1 inner join (select program_id,max(time_created) as max_time_created from program_votehistory group by participant_id,program_id) as tmp2 on (tmp1.program_id=tmp2.program_id and tmp1.time_created=tmp2.max_time_created)) as v on (p.participant_id=v.participant_id and p.program_id=v.program_id) where p.participant_id={} order by p.id {};".format(participant_id,order))
 
     @staticmethod
     def get_by_program_id(participant,program_id):

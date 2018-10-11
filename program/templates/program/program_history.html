@@ -82,6 +82,7 @@
                 {% endfor %}
                 <div class="clear"></div>
             </div>
+            Visited at {{ new_program.time_created }}
         </div>
     </div>
 </div>
@@ -92,9 +93,10 @@
 {% endif %}
 
 {% if programs|length %}
+Sort by:
 <select id="sort_order" class="form-control" style="width:100%;">
-    <option value="desc">Visit time (newer)</option>
-    <option value="asc">Visit time (older)</option>
+    <option value="desc">Visit time (newest first)</option>
+    <option value="asc">Visit time (oldest first)</option>
 </select>
 {% endif %}
 
@@ -127,6 +129,7 @@
                 {% endfor %}
                 <div class="clear"></div>
             </div>
+            <div style="width:100%;text-align:right;font-style:italic;font-size:0.7em;">Visited at <b>{{ program.time_created }}</b></div>
         </div>
     </div>
 </div>
