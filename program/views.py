@@ -132,7 +132,10 @@ def program_history_view(request):
         else:
             point = None
         context["new_program"] = format_program(new_program_id,point)
-    context["programs"] = [format_program(p.program_id,p.point) for p in ProgramHistory.get_all_for_participant_with_points(participant.id, sort_order) if p.program.id!=new_program_id]
+    if sort_order:
+        context["programs"] = [format_program(p.program_id,p.point) for p in ProgramHistory.get_all_for_participant_with_points(participant.id, sort_order) if p.program.id!=new_program_id]
+    else:
+        context["programs"] = [format_program(p.program_id,p.point) for p in ProgramHistory.get_all_for_participant_with_points(participant.id) if p.program.id!=new_program_id]
     return render(request, "program/program_history.html", context=context)
     
 

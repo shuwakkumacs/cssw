@@ -156,6 +156,7 @@ $("#sort_order").on("change", function(){
     window.location.href = "/program_history/?sort_order="+value;
 });
 
-$("#sort_order").val(getUrlVars()["sort_order"]);
+var vars = getUrlVars();
+if(vars["sort_order"]) $("#sort_order").val(vars["sort_order"]);
 </script>
 {% endblock %}
