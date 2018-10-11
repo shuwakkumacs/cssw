@@ -47,18 +47,33 @@ def add_program_history(participant,program):
         ProgramHistory.add(participant,program)
 
 @csrf_exempt
-def qrscan(request,session_number,program_number):
+def qrscan(request,hash_code):
+    try:
+        decoded_hash = base64.b64decode(hash_code).decode("ascii")
+        print(decoded_hash)
+        session_number = decoded_hash[0]
+        print(session_number)
+        program_number = int(decoded_hash[1:4])
+        print(program_number)
+        program_id = int(decoded_hash[4:])
+        print(program_id)
+    except:
+        return HttpResponse("Invalid hash. Please contact system administrator.")
+
     access_token = request.COOKIES.get('access_token')
     data_token = AccessToken.authorize(access_token)
     program = Program.get_by_program_number(session_number,program_number)
-    if data_token:
-        participant = data_token.participant
-        add_program_history(participant,program)
-        return redirect("/program_history/?npid={}".format(program.id))
+    if program_id==program.id:
+        if data_token:
+            participant = data_token.participant
+            add_program_history(participant,program)
+            return redirect("/program_history/?npid={}".format(program.id))
+        else:
+            response = redirect("/login/?mode=onsite&npid={}".format(program.id))
+            response.delete_cookie("access_token")
+            return response
     else:
-        response = redirect("/login/?mode=onsite&npid={}".format(program.id))
-        response.delete_cookie("access_token")
-        return response
+        return HttpResponse("Invalid hash. Please contact system administrator.")
 
 @csrf_exempt
 def vote(request,program_id,point):

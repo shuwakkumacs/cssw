@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'^password_change/(?P<reset_token>\w{1,100})/$', views.password_change_view),
     url(r'^program_history/$', views.program_history_view),
     url(r'^operation/registration/$', views.registration),
-    url(r'^operation/qrscan/(?P<session_number>\w)/(?P<program_number>[0-9]{1,2})/$', views.qrscan),
+    url(r'^operation/qrscan/(?P<hash_code>\S{1,100})/$', views.qrscan),
     url(r'^operation/signup/$', views.signup),
     url(r'^operation/login/$', views.login),
     url(r'^operation/logout/$', views.logout),
