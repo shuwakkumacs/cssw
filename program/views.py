@@ -50,20 +50,16 @@ def add_program_history(participant,program):
 def qrscan(request,hash_code):
     try:
         decoded_hash = base64.b64decode(hash_code).decode("ascii")
-        print(decoded_hash)
         session_number = decoded_hash[0]
-        print(session_number)
         program_number = int(decoded_hash[1:4])
-        print(program_number)
         program_id = int(decoded_hash[4:])
-        print(program_id)
     except:
         return HttpResponse("Invalid hash. Please contact system administrator.")
 
     access_token = request.COOKIES.get('access_token')
     data_token = AccessToken.authorize(access_token)
     program = Program.get_by_program_number(session_number,program_number)
-    if program_id==program.id:
+    if program and program_id==program.id:
         if data_token:
             participant = data_token.participant
             add_program_history(participant,program)
@@ -106,6 +102,8 @@ def program_history_view(request):
             "point": point
         }
 
+    sort_order = request.GET.get(key="sort_order", default=None)
+
     new_program_id = request.GET.get(key="npid", default=None)
     if new_program_id:
         new_program_id = int(new_program_id)
@@ -134,7 +132,7 @@ def program_history_view(request):
         else:
             point = None
         context["new_program"] = format_program(new_program_id,point)
-    context["programs"] = [format_program(p.program_id,p.point) for p in ProgramHistory.get_all_for_participant_with_points(participant.id) if p.program.id!=new_program_id]
+    context["programs"] = [format_program(p.program_id,p.point) for p in ProgramHistory.get_all_for_participant_with_points(participant.id, sort_order) if p.program.id!=new_program_id]
     return render(request, "program/program_history.html", context=context)
     
 

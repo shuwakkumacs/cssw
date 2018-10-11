@@ -59,8 +59,8 @@
         display: none;
     }
 </style>
-<b>Just added:</b>
 {% if new_program %}
+<b>Just added:</b>
 <div class="card new-program">
     <div class="card-header">
         <div class="program_number">{{ new_program.session_number }}-{{ new_program.program_number }}</div>
@@ -85,7 +85,19 @@
         </div>
     </div>
 </div>
+{% else %}
+    {% if programs|length == 0 %}
+    No program found on your list. Let's go scan your first QR code! :)
+    {% endif %}
 {% endif %}
+
+{% if programs|length %}
+<select id="sort_order" class="form-control" style="width:100%;">
+    <option value="desc">Visit time (newer)</option>
+    <option value="asc">Visit time (older)</option>
+</select>
+{% endif %}
+
 {% for program in programs %}
 <div class="card program">
     <div class="card-header">
@@ -121,10 +133,29 @@
 {% endfor %}
 
 <script>
+var getUrlVars = function(){
+    var vars = {}; 
+    var param = location.search.substring(1).split('&');
+    for(var i = 0; i < param.length; i++) {
+        var keySearch = param[i].search(/=/);
+        var key = '';
+        if(keySearch != -1) key = param[i].slice(0, keySearch);
+        var val = param[i].slice(param[i].indexOf('=', 0) + 1);
+        if(key != '') vars[key] = decodeURI(val);
+    } 
+    return vars; 
+}
+
 var vote = function(program_id,point){
     $.get({
         "url": "/operation/vote/"+program_id+"/"+point
     });
 };
+$("#sort_order").on("change", function(){
+    var value = $(this).val();
+    window.location.href = "/program_history/?sort_order="+value;
+});
+
+$("#sort_order").val(getUrlVars()["sort_order"]);
 </script>
 {% endblock %}
