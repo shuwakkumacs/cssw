@@ -22,26 +22,6 @@ import base64
 
 # Create your views here.
 
-@csrf_exempt
-def test(request):
-    #msg = EmailMessage('CSSW registration password reset','下記のURLからパスワードの変更を行ってください。※心当たりが無い場合は破棄してください。\nPlease proceed to the following URL to change your password. *Please ignore if you are not aware of this message.\nhttps://cssw.r9n.net\n\n--CSSW committee','csswreg@gmail.com',['ss.shwk@gmail.com','susumu@pcl.cs.waseda.ac.jp'])
-    #msg.send()
-    return HttpResponse("")
-
-@csrf_exempt
-def main(request):
-    #access_token = request.COOKIES.get('access_token')
-    #data_access_token = AccessToken.authorize(access_token)
-    #if not data_access_token:
-    #    response = redirect("../login/?mode=reg")
-    #    response.delete_cookie("access_token")
-    #    return response
-
-    #form = ParticipantForm()
-    #
-    #return render(request, "program/main.html", context = {"form": form})
-    return HttpResponse("")
-
 def add_program_history(participant,program):
     if program and not ProgramHistory.get_by_program_id(participant,program.id):
         ProgramHistory.add(participant,program)
@@ -127,12 +107,13 @@ def program_history_view(request):
     participant = data_access_token.participant
 
     if new_program_id and ProgramHistory.get_by_program_id(participant,new_program_id):
+        p = ProgramHistory.get_by_program_id(participant,new_program_id)
         latest_vote = VoteHistory.get_latest_by_program_id(participant,new_program_id)
         if latest_vote:
             point = latest_vote.point
         else:
             point = None
-        context["new_program"] = format_program(new_program_id,point)
+        context["new_program"] = format_program(new_program_id,point,p.time_created)
     if sort_order:
         context["programs"] = [format_program(p.program_id,p.point,p.time_created) for p in ProgramHistory.get_all_for_participant_with_points(participant.id, sort_order) if p.program.id!=new_program_id]
     else:
@@ -319,11 +300,6 @@ def registration_complete_view(request):
     return render(request, "program/registration_complete.html", context=context)
 
 @csrf_exempt
-def signup_view(request):
-    access_token = request.COOKIES.get('access_token')
-    return redirect('../')
-
-@csrf_exempt
 def signup(request):
     request_data = json.loads(request.body)    
     access_token = generate_access_token()
@@ -345,7 +321,7 @@ def login_view(request):
     access_token = request.COOKIES.get('access_token')
     data_access_token = AccessToken.authorize(access_token)
     if data_access_token:
-        if mode=="reg":
+        if not mode or mode=="reg":
             response = redirect("/registration/?mode=edit")
         elif mode=="onsite":
             response = redirect("/program_history/")
@@ -399,20 +375,6 @@ def login(request):
             response = redirect(login_dest)
             response.set_cookie("access_token", access_token, max_age=60*60*24)
             return response
-            #if mode=="reg":
-            #    response = redirect("/registration/?mode=edit")
-            #elif mode=="onsite":
-            #    response = redirect("/program_history/")
-            #else: 
-            #    edit_active = (settings["EXPIRATION"]["edit"] and settings["EXPIRATION"]["edit_date"]>timezone.now())
-            #    onsite_active = (settings["EXPIRATION"]["onsite"] and settings["EXPIRATION"]["onsite_date"]>timezone.now())
-
-            #    if edit_active:
-            #        response = redirect("/registration/?mode=edit")
-            #    else:
-            #        response = redirect("/")
-            #response.set_cookie("access_token", access_token, max_age=60*60*24)
-            #return response
     else:
         return redirect("../../login/?mode={}&err=unauthorized".format(mode))
 

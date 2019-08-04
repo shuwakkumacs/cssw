@@ -4,16 +4,13 @@ from . import views
 
 app_name="program"
 urlpatterns = [
-    #url(r'^base/(?P<project_name>\w+)/$', views.load_base, name="load_base"),
-    url(r'^test/$', views.test),
-    url(r'^registration/$', views.registration_view),
-    url(r'^registration_complete/$', views.registration_complete_view),
-    url(r'^signup/$', views.signup_view),
-    url(r'^login/$', views.login_view),
-    url(r'^registration_list/$', views.registration_list_view),
-    url(r'^password_forget/$', views.password_forget_view),
-    url(r'^password_change/(?P<reset_token>\w{1,100})/$', views.password_change_view),
-    url(r'^program_history/$', views.program_history_view),
+    url(r'^registration/$', views.registration_view),  # 参加登録画面
+    url(r'^registration_complete/$', views.registration_complete_view),  # 参加登録終了画面
+    url(r'^login/$', views.login_view),  # ログイン画面
+    url(r'^registration_list/$', views.registration_list_view),  # 参加登録一覧管理画面（要ログイン）
+    url(r'^password_forget/$', views.password_forget_view),  # パスワード再発行用メールアドレス入力画面
+    url(r'^password_change/(?P<reset_token>\w{1,100})/$', views.password_change_view),  # パスワード変更画面（メールから誘導）
+    url(r'^program_history/$', views.program_history_view),  # スキャン済み発表プログラム一覧出力画面
     url(r'^operation/registration/$', views.registration),
     url(r'^operation/qrscan/(?P<hash_code>\S{1,100})/$', views.qrscan),
     url(r'^operation/signup/$', views.signup),

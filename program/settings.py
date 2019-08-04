@@ -15,9 +15,6 @@ settings = {
         "registration": True,
         "registration_date": datetime(2018, 9, 7, 23, 59, 59, 999999),
         "edit": True,
-        "edit_date": datetime(2018, 9, 28, 23, 59, 59, 999999),
-        "onsite": True,
-        "onsite_date": datetime(2018, 10, 13, 23, 59, 59, 999999),
-    },
-    "SESSION_CATEGORIES": ["Technical", "Work-in-Progress", "Tmp"]
+        "edit_date": datetime(2018, 9, 28, 23, 59, 59, 999999)
+    }
 }
